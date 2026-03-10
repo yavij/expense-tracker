@@ -1,0 +1,2060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expense Tracker - Preview</title>
+  <style>
+    /* === Theme Variables === */
+    :root {
+      --bg-primary: #f0f2f5;
+      --bg-secondary: #ffffff;
+      --text-primary: #1a1a2e;
+      --text-secondary: #6b7280;
+      --border-color: #e5e7eb;
+      --topbar-bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      --topbar-text: #eee;
+      --accent-color: #2563eb;
+      --accent-hover: #1d4ed8;
+      --sidebar-bg: #f9fafb;
+    }
+    html[data-theme="dark"] {
+      --bg-primary: #111827; --bg-secondary: #1f2937; --text-primary: #f0f2f5;
+      --text-secondary: #9ca3af; --border-color: #374151;
+      --topbar-bg: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+      --topbar-text: #e2e8f0; --accent-color: #60a5fa; --accent-hover: #3b82f6; --sidebar-bg: #1f2937;
+    }
+    html[data-theme="blue"] {
+      --bg-primary: #eff6ff; --bg-secondary: #ffffff; --text-primary: #1e3a8a;
+      --text-secondary: #475569; --border-color: #bfdbfe;
+      --topbar-bg: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+      --topbar-text: #eff6ff; --accent-color: #3b82f6; --accent-hover: #2563eb; --sidebar-bg: #f0f9ff;
+    }
+    html[data-theme="green"] {
+      --bg-primary: #ecfdf5; --bg-secondary: #ffffff; --text-primary: #065f46;
+      --text-secondary: #4b5563; --border-color: #a7f3d0;
+      --topbar-bg: linear-gradient(135deg, #047857 0%, #065f46 100%);
+      --topbar-text: #f0fdf4; --accent-color: #10b981; --accent-hover: #059669; --sidebar-bg: #f0fdf4;
+    }
+    html[data-theme="purple"] {
+      --bg-primary: #faf5ff; --bg-secondary: #ffffff; --text-primary: #581c87;
+      --text-secondary: #6b5b95; --border-color: #ddd6fe;
+      --topbar-bg: linear-gradient(135deg, #7c3aed 0%, #581c87 100%);
+      --topbar-text: #faf5ff; --accent-color: #a855f7; --accent-hover: #7c3aed; --sidebar-bg: #faf5ff;
+    }
+    html[data-theme="sunset"] {
+      --bg-primary: #fff7ed; --bg-secondary: #ffffff; --text-primary: #7c2d12;
+      --text-secondary: #a16207; --border-color: #fed7aa;
+      --topbar-bg: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+      --topbar-text: #fef3c7; --accent-color: #f97316; --accent-hover: #ea580c; --sidebar-bg: #fffbeb;
+    }
+
+    /* === Reset & Base === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+    #root { min-height: 100vh; }
+    a { color: inherit; text-decoration: none; }
+
+    /* === Layout === */
+    .app { max-width: 960px; margin: 0 auto; padding: 1.5rem; }
+
+    /* === Top Bar === */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.85rem 1.5rem;
+      background: var(--topbar-bg);
+      color: var(--topbar-text);
+      margin: 0 0 1.5rem 0;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+      flex-wrap: wrap;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 0.25rem; }
+    .admin-toggle {
+      display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;
+      color: #cbd5e1; margin-left: auto; order: 3; width: 100%;
+      margin-top: 0.5rem;
+    }
+    .admin-toggle label { color: #cbd5e1; font-weight: 500; }
+    .admin-toggle button {
+      padding: 0.3rem 0.6rem; border: 1px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.1); color: #cbd5e1;
+      border-radius: 4px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 500; transition: all 0.15s ease;
+    }
+    .admin-toggle button:hover { background: rgba(255,255,255,0.15); }
+    .admin-toggle button.active {
+      background: #2563eb; color: white; border-color: #2563eb;
+    }
+    .topbar-brand {
+      font-weight: 700; font-size: 1.1rem; color: #fff;
+      margin-right: 1.5rem; letter-spacing: -0.02em;
+    }
+    .topbar a {
+      color: #94b8ff; padding: 0.4rem 0.75rem; border-radius: 6px;
+      font-size: 0.9rem; transition: all 0.15s ease; cursor: pointer;
+    }
+    .topbar a:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .topbar a.active {
+      background: rgba(255,255,255,0.15); color: #fff; font-weight: 600;
+    }
+    .topbar .user {
+      display: flex; align-items: center; gap: 0.6rem; font-size: 0.9rem;
+      position: relative;
+    }
+    .user-trigger {
+      display: flex; align-items: center; gap: 0.6rem;
+      cursor: pointer; transition: opacity 0.2s ease;
+    }
+    .user-trigger:hover { opacity: 0.8; }
+    .topbar .user img {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+    .topbar .user span { color: #cbd5e1; }
+
+    /* User Dropdown */
+    .user-dropdown {
+      position: absolute; top: 100%; right: 0; margin-top: 0.5rem;
+      background: var(--bg-secondary); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      min-width: 280px; z-index: 1000; display: none;
+      animation: dropdownSlide 0.2s ease forwards;
+    }
+    .user-dropdown.active { display: block; }
+    @keyframes dropdownSlide {
+      0% { opacity: 0; transform: translateY(-10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .user-dropdown-header {
+      padding: 1.25rem; border-bottom: 1px solid #e5e7eb;
+      display: flex; align-items: center; gap: 1rem;
+    }
+    .user-dropdown-avatar {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 1.5rem; flex-shrink: 0;
+    }
+    .user-dropdown-info { flex: 1; }
+    .user-dropdown-name {
+      font-weight: 600; color: #1a1a2e; font-size: 0.95rem;
+      margin-bottom: 0.25rem;
+    }
+    .user-dropdown-role {
+      display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px;
+      background: #fef2f2; color: #dc2626; font-size: 0.7rem;
+      font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .user-dropdown-body {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .user-dropdown-field {
+      display: flex; flex-direction: column; gap: 0.2rem;
+      margin-bottom: 0.75rem; font-size: 0.85rem;
+    }
+    .user-dropdown-field:last-child { margin-bottom: 0; }
+    .user-dropdown-label {
+      color: #6b7280; font-weight: 500; font-size: 0.75rem;
+      text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .user-dropdown-value {
+      color: #1a1a2e; font-weight: 500;
+    }
+    .user-dropdown-footer {
+      padding: 1rem 1.25rem;
+    }
+    .user-dropdown-logout {
+      width: 100%; padding: 0.6rem 0.75rem;
+      background: #ef4444; color: white; border: none;
+      border-radius: 6px; cursor: pointer; font-weight: 500;
+      font-size: 0.9rem; transition: background 0.15s ease;
+    }
+    .user-dropdown-logout:hover { background: #dc2626; }
+
+    /* === Login Page === */
+    .login-page {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      position: relative; overflow: hidden;
+    }
+
+    /* Animated background shapes */
+    .login-bg { position: absolute; inset: 0; overflow: hidden; z-index: 0; }
+    .login-shape {
+      position: absolute; border-radius: 50%; opacity: 0.08;
+      animation: loginFloat 20s ease-in-out infinite;
+    }
+    .login-shape-1 {
+      width: 600px; height: 600px; top: -200px; right: -150px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      animation-duration: 25s;
+    }
+    .login-shape-2 {
+      width: 400px; height: 400px; bottom: -100px; left: -100px;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      animation-duration: 20s; animation-delay: -5s;
+    }
+    .login-shape-3 {
+      width: 250px; height: 250px; top: 40%; left: 15%;
+      background: linear-gradient(135deg, #4facfe, #00f2fe);
+      animation-duration: 18s; animation-delay: -10s;
+    }
+    .login-shape-4 {
+      width: 180px; height: 180px; top: 20%; right: 20%;
+      background: linear-gradient(135deg, #43e97b, #38f9d7);
+      animation-duration: 22s; animation-delay: -3s;
+    }
+    @keyframes loginFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25%      { transform: translate(30px, -40px) scale(1.05); }
+      50%      { transform: translate(-20px, 20px) scale(0.95); }
+      75%      { transform: translate(15px, 30px) scale(1.02); }
+    }
+
+    /* Container */
+    .login-container {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column; align-items: center;
+      width: 90%; max-width: 420px;
+    }
+
+    /* Card */
+    .login-card {
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(20px);
+      padding: 2.5rem 2.5rem 2rem; border-radius: 20px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1);
+      text-align: center; width: 100%;
+      animation: loginCardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    @keyframes loginCardIn {
+      0%   { opacity: 0; transform: translateY(30px) scale(0.96); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Logo */
+    .login-logo { margin-bottom: 1.25rem; }
+    .login-logo-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 60px; height: 60px; border-radius: 16px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white; box-shadow: 0 8px 24px rgba(102, 126, 234, 0.35);
+      font-size: 1.8rem; font-weight: 700;
+    }
+
+    /* Title & subtitle */
+    .login-title {
+      font-size: 1.6rem; font-weight: 800; color: #1a1a2e;
+      margin-bottom: 0.3rem; letter-spacing: -0.02em;
+    }
+    .login-subtitle {
+      color: #6b7280; font-size: 0.92rem; margin-bottom: 0; font-weight: 400;
+    }
+
+    /* Divider */
+    .login-divider {
+      height: 1px; background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+      margin: 1.5rem 0;
+    }
+
+    /* Privacy line */
+    .login-privacy {
+      color: #9ca3af; font-size: 0.8rem; margin-top: 1.25rem;
+    }
+
+    /* Feature pills below card */
+    .login-features {
+      display: flex; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap;
+      justify-content: center;
+      animation: loginCardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+    }
+    .login-feature {
+      display: flex; align-items: center; gap: 0.6rem;
+      background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+      padding: 0.6rem 1rem; border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.85); font-size: 0.8rem;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+    .login-feature:hover {
+      background: rgba(255,255,255,0.16); transform: translateY(-2px);
+    }
+    .login-feature-icon { font-size: 1.3rem; flex-shrink: 0; }
+    .login-feature strong {
+      display: block; font-weight: 600; color: #fff; font-size: 0.82rem;
+    }
+    .login-feature span { color: rgba(255,255,255,0.6); font-size: 0.72rem; }
+
+    /* === Buttons === */
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.55rem 1.1rem; border-radius: 8px; border: none;
+      cursor: pointer; font-size: 0.95rem; font-weight: 500;
+      transition: all 0.15s ease; text-decoration: none;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--accent-color); color: white; }
+    .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 2px 8px rgba(37,99,235,0.3); }
+    .btn-secondary { background: #e5e7eb; color: #374151; }
+    .btn-secondary:hover { background: #d1d5db; }
+    .btn-danger { background: #ef4444; color: white; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.8rem; margin-left: 0.25rem; }
+    .btn-outline {
+      background: transparent; border: 1px solid #d1d5db; color: #374151;
+    }
+    .btn-outline:hover { background: #f9fafb; border-color: #9ca3af; }
+
+    /* Login Tabs */
+    .login-tabs {
+      display: flex; gap: 0; margin-bottom: 1.5rem;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .login-tabs button {
+      padding: 0.75rem 1.25rem; border: none; background: none;
+      cursor: pointer; font-size: 0.9rem; color: #6b7280;
+      font-weight: 500; transition: color 0.15s ease;
+      position: relative; flex: 1;
+    }
+    .login-tabs button:hover { color: #374151; }
+    .login-tabs button.active {
+      font-weight: 600; color: #2563eb;
+      border-bottom: 2px solid #2563eb; margin-bottom: -2px;
+    }
+    .login-tab-content { display: none; }
+    .login-tab-content.active { display: block; }
+
+    /* OTP Input Boxes */
+    .otp-input-group {
+      display: flex; gap: 0.5rem; justify-content: center; margin: 1rem 0;
+    }
+    .otp-input {
+      width: 45px; height: 50px; border: 2px solid #d1d5db;
+      border-radius: 8px; font-size: 1.5rem; text-align: center;
+      font-weight: 600; color: #1a1a2e; transition: border-color 0.2s ease;
+    }
+    .otp-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+    /* Phone input styling */
+    .phone-input-group {
+      display: flex; gap: 0.5rem; align-items: stretch;
+      margin-bottom: 1rem;
+    }
+    .phone-prefix {
+      display: flex; align-items: center; padding: 0.6rem 0.75rem;
+      background: #f3f4f6; border: 1px solid #d1d5db;
+      border-radius: 8px; font-weight: 600; color: #374151;
+    }
+    .phone-input-group input {
+      flex: 1; padding: 0.6rem 0.75rem;
+      border: 1px solid #d1d5db; border-radius: 8px;
+      font-size: 0.95rem; color: #1a1a2e; background: white;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .phone-input-group input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+    /* Google Sign In Button */
+    .google-signin-btn {
+      display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+      background: white; border: 1px solid #e5e7eb; color: #1a1a2e;
+      padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer;
+      font-weight: 500; font-size: 0.95rem; transition: all 0.15s ease;
+      width: 100%;
+    }
+    .google-signin-btn:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: #f9fafb; }
+
+    /* === Layout Presets === */
+    .layout-toolbar {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin-bottom: 1.25rem; padding: 0.75rem;
+      background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;
+    }
+    .layout-toolbar label {
+      font-weight: 600; font-size: 0.9rem; color: #374151;
+      margin-right: 0.5rem;
+    }
+    .layout-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 0.4rem; padding: 0.5rem 0.9rem; border: 1px solid #d1d5db;
+      background: white; border-radius: 6px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 500; color: #374151;
+      transition: all 0.15s ease;
+    }
+    .layout-btn:hover { background: #f3f4f6; border-color: #9ca3af; }
+    .layout-btn.active {
+      background: var(--accent-color); color: white; border-color: var(--accent-color);
+      box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+    }
+
+    /* === Summary Cards === */
+    .cards {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .cards.layout-compact {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .cards.layout-sidebar {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .card {
+      background: var(--bg-secondary); padding: 1.25rem 1.5rem; border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid var(--border-color);
+      transition: box-shadow 0.15s ease, opacity 0.2s ease;
+      position: relative; cursor: grab;
+    }
+    .card.dragging { opacity: 0.5; }
+    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .card-drag-handle {
+      position: absolute; top: 0.75rem; right: 0.75rem;
+      color: #d1d5db; font-size: 0.8rem; cursor: grab;
+      font-weight: bold; display: none; user-select: none;
+    }
+    .card:hover .card-drag-handle { display: block; }
+    .card h3 {
+      font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;
+      color: #6b7280; margin-bottom: 0.4rem; font-weight: 600;
+    }
+    .card .amount { font-size: 1.6rem; font-weight: 700; color: #1a1a2e; }
+    .card.savings .amount { color: #059669; }
+    .card.loans .amount { color: #dc2626; }
+    .card.expenses .amount { color: #2563eb; }
+
+    /* === Forms === */
+    .form-group { margin-bottom: 1rem; }
+    .form-group label {
+      display: block; margin-bottom: 0.3rem;
+      font-weight: 600; font-size: 0.875rem; color: #374151;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 0.6rem 0.75rem;
+      border: 1px solid var(--border-color); border-radius: 8px;
+      font-size: 0.95rem; color: var(--text-primary); background: var(--bg-secondary);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    .form-group textarea { min-height: 80px; resize: vertical; }
+    .form-actions { margin-top: 1.25rem; display: flex; gap: 0.75rem; }
+
+    /* === Table === */
+    .table-wrap {
+      overflow-x: auto; background: var(--bg-secondary); border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid var(--border-color);
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      padding: 0.75rem 1rem; text-align: left;
+      border-bottom: 1px solid #f3f4f6; font-size: 0.9rem;
+    }
+    th {
+      background: #f9fafb; font-weight: 600; color: #6b7280;
+      text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.04em;
+    }
+    tbody tr { transition: background 0.1s ease; }
+    tbody tr:hover { background: #f9fafb; }
+    tbody tr:last-child td { border-bottom: none; }
+
+    /* === Filters === */
+    .filters {
+      display: flex; flex-wrap: wrap; gap: 0.5rem;
+      align-items: center; margin-bottom: 1rem;
+    }
+    .filters input, .filters select {
+      padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 8px;
+      font-size: 0.9rem; background: white; color: #374151;
+    }
+    .filters input:focus, .filters select:focus {
+      outline: none; border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+
+    /* === Tabs === */
+    .tabs {
+      display: flex; gap: 0; margin-bottom: 1.25rem;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .tabs button {
+      padding: 0.75rem 1.25rem; border: none; background: none;
+      cursor: pointer; font-size: 0.95rem; color: #6b7280;
+      font-weight: 500; transition: color 0.15s ease;
+      position: relative;
+    }
+    .tabs button:hover { color: #374151; }
+    .tabs button.active {
+      font-weight: 600; color: #2563eb;
+      border-bottom: 2px solid #2563eb; margin-bottom: -2px;
+    }
+
+    /* === Month Selector === */
+    .month-nav {
+      display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem;
+    }
+    .month-nav span {
+      font-weight: 700; min-width: 140px; text-align: center;
+      font-size: 1.1rem; color: #1a1a2e;
+    }
+
+    /* === Page header === */
+    .page-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+    .page-header h2 { font-size: 1.3rem; font-weight: 700; }
+
+    /* === Quick actions === */
+    .quick-actions {
+      display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem;
+    }
+
+    /* === Status Badges === */
+    .badge {
+      display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px;
+      font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .badge-active { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .badge-paid-off { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+
+    /* === Gain / Loss Colors === */
+    .text-gain { color: #16a34a; }
+    .text-loss { color: #dc2626; }
+
+    /* === Investment & Debt Cards === */
+    .summary-cards {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .summary-card {
+      background: white; padding: 1.25rem 1.5rem; border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid #e5e7eb;
+    }
+    .summary-card h3 {
+      font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;
+      color: #6b7280; margin-bottom: 0.4rem; font-weight: 600;
+    }
+    .summary-card .value {
+      font-size: 1.5rem; font-weight: 700; color: #1a1a2e;
+    }
+    .summary-card .value.gain { color: #16a34a; }
+    .summary-card .value.loss { color: #dc2626; }
+
+    /* === Bar Chart === */
+    .bar-chart-container {
+      display: flex; align-items: flex-end; gap: 0.5rem;
+      height: 250px; padding: 0.5rem 0;
+    }
+    .bar-col {
+      display: flex; flex-direction: column; align-items: center;
+      flex: 1; min-width: 40px; height: 100%;
+      justify-content: flex-end;
+    }
+    .bar-fill {
+      width: 70%; max-width: 50px; border-radius: 4px 4px 0 0;
+      background: linear-gradient(to top, #16a34a, #4ade80);
+      transition: height 0.4s ease; position: relative;
+      min-height: 2px;
+    }
+    .bar-fill:hover { opacity: 0.85; }
+    .bar-fill .bar-tooltip {
+      position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+      font-size: 0.7rem; font-weight: 600; white-space: nowrap;
+      opacity: 0; transition: opacity 0.2s; padding-bottom: 4px;
+    }
+    .bar-fill:hover .bar-tooltip { opacity: 1; }
+    .bar-label {
+      font-size: 0.7rem; color: #6b7280; margin-top: 0.4rem;
+      text-align: center; font-weight: 500;
+    }
+
+    /* === Horizontal Bar Chart === */
+    .h-bar-chart { display: flex; flex-direction: column; gap: 0.75rem; }
+    .h-bar-row { display: flex; align-items: center; gap: 0.75rem; }
+    .h-bar-label { min-width: 100px; font-size: 0.85rem; font-weight: 500; color: #374151; text-align: right; }
+    .h-bar-track { flex: 1; height: 24px; background: #f3f4f6; border-radius: 12px; overflow: hidden; }
+    .h-bar-fill {
+      height: 100%; border-radius: 12px; transition: width 0.4s ease;
+      display: flex; align-items: center; padding-left: 0.5rem;
+      font-size: 0.75rem; font-weight: 600; color: white; white-space: nowrap;
+    }
+    .h-bar-amount { min-width: 80px; font-size: 0.85rem; font-weight: 600; color: #1a1a2e; }
+
+    /* === SVG Chart Styles === */
+    .chart-svg { width: 100%; height: auto; }
+    .chart-line { fill: none; stroke: #2563eb; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .chart-grid { stroke: #e5e7eb; stroke-width: 0.5; }
+    .chart-axis-text { fill: #6b7280; font-size: 11px; }
+    .chart-dot { fill: #2563eb; stroke: white; stroke-width: 2; }
+
+    /* === Donut Chart === */
+    .donut-chart { display: flex; align-items: center; gap: 2rem; flex-wrap: wrap; }
+    .donut-legend { display: flex; flex-direction: column; gap: 0.5rem; }
+    .donut-legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
+    .donut-legend-color { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+    /* === Analytics Cards Row === */
+    .analytics-cards {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .analytics-card {
+      background: white; padding: 1.25rem; border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid #e5e7eb;
+      text-align: center;
+    }
+    .analytics-card .label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: #6b7280; font-weight: 600; }
+    .analytics-card .value { font-size: 1.35rem; font-weight: 700; color: #1a1a2e; margin-top: 0.3rem; }
+    .analytics-card .value.positive { color: #16a34a; }
+
+    /* === Net Worth Card === */
+    .networth-card {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: white; padding: 2rem; border-radius: 16px;
+      text-align: center; margin-bottom: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    .networth-card .label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.7; }
+    .networth-card .value { font-size: 2.5rem; font-weight: 800; margin: 0.5rem 0; }
+    .networth-card .growth {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      font-size: 0.9rem; padding: 0.3rem 0.8rem; border-radius: 20px;
+      background: rgba(22,163,74,0.2); color: #4ade80;
+    }
+
+    /* === Salary Tracker === */
+    .salary-tracker { max-width: 100%; }
+    .salary-tracker h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 1rem; }
+    .form-section {
+      background: #f9fafb; border-radius: 12px; padding: 1.5rem;
+      margin-bottom: 1.5rem; border: 1px solid #e5e7eb;
+    }
+    .salary-form {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem; margin-top: 1rem;
+    }
+    .chart-section {
+      background: #f9fafb; border-radius: 12px; padding: 1.5rem;
+      border: 1px solid #e5e7eb; margin-top: 1.5rem;
+    }
+
+    /* === Comparison Bars === */
+    .comparison-bars { display: flex; flex-direction: column; gap: 1rem; margin: 1rem 0; }
+    .comparison-bar-row { display: flex; align-items: center; gap: 1rem; }
+    .comparison-bar-label { min-width: 100px; font-weight: 600; font-size: 0.9rem; }
+    .comparison-bar-track { flex: 1; height: 32px; background: #f3f4f6; border-radius: 8px; overflow: hidden; }
+    .comparison-bar-fill {
+      height: 100%; border-radius: 8px; display: flex; align-items: center;
+      padding: 0 1rem; font-weight: 600; font-size: 0.85rem; color: white;
+    }
+    .comparison-bar-fill.invest { background: linear-gradient(90deg, #16a34a, #4ade80); }
+    .comparison-bar-fill.debt { background: linear-gradient(90deg, #dc2626, #f87171); }
+
+    /* === Chart Wraps === */
+    .chart-wrap {
+      background: white; border-radius: 12px; padding: 1.5rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid #e5e7eb;
+      margin-bottom: 1.5rem;
+    }
+    .chart-wrap h3 {
+      font-size: 1rem; font-weight: 600; color: #374151; margin-bottom: 1rem;
+    }
+
+    /* === NEW ENHANCED STYLES === */
+    /* Search bar */
+    .search-bar { display: flex; align-items: center; gap: 0.5rem; flex: 1; max-width: 300px; position: relative; }
+    .search-bar input { width: 100%; padding: 0.5rem 0.75rem 0.5rem 2rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem; background: white; }
+    .search-bar::before { content: '🔍'; position: absolute; left: 0.6rem; color: #9ca3af; font-size: 0.85rem; }
+
+    /* Progress bars for budgets */
+    .progress-bar-container { margin-bottom: 1rem; }
+    .progress-bar-header { display: flex; justify-content: space-between; margin-bottom: 0.3rem; font-size: 0.85rem; }
+    .progress-bar-track { height: 20px; background: #f3f4f6; border-radius: 10px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; border-radius: 10px; transition: width 0.4s ease; display: flex; align-items: center; padding-left: 0.5rem; font-size: 0.7rem; font-weight: 600; color: white; }
+    .progress-bar-fill.green { background: linear-gradient(90deg, #16a34a, #4ade80); }
+    .progress-bar-fill.yellow { background: linear-gradient(90deg, #d97706, #fbbf24); }
+    .progress-bar-fill.red { background: linear-gradient(90deg, #dc2626, #f87171); }
+
+    /* Status toggle */
+    .status-toggle { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .status-dot.active { background: #16a34a; }
+    .status-dot.inactive { background: #d1d5db; }
+
+    /* Category badges */
+    .cat-badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 12px; font-size: 0.75rem; font-weight: 500; }
+    .cat-daily { background: #dbeafe; color: #1d4ed8; }
+    .cat-home { background: #fef3c7; color: #92400e; }
+    .cat-savings { background: #d1fae5; color: #065f46; }
+    .cat-loan { background: #fee2e2; color: #991b1b; }
+    .cat-cosmetics { background: #fce7f3; color: #9d174d; }
+    .cat-trip { background: #e0e7ff; color: #3730a3; }
+
+    /* Export button */
+    .btn-export { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+    .btn-export:hover { background: #e5e7eb; }
+
+    /* Filter buttons row */
+    .filter-btns { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    .filter-btn { padding: 0.4rem 0.8rem; border: 1px solid #d1d5db; background: white; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all 0.15s; }
+    .filter-btn:hover { background: #f3f4f6; }
+    .filter-btn.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
+
+    /* === Page visibility === */
+    .page { display: none; }
+    .page.active { display: block; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* === Responsive === */
+    @media (max-width: 640px) {
+      .app { padding: 1rem; }
+      .topbar {
+        flex-direction: column; gap: 0.5rem;
+        margin: -1rem -1rem 1rem -1rem; padding: 0.75rem 1rem;
+      }
+      .topbar-left { flex-wrap: wrap; }
+      .cards { grid-template-columns: 1fr; }
+      .summary-cards { grid-template-columns: 1fr; }
+      .analytics-cards { grid-template-columns: 1fr 1fr; }
+      .filters { flex-direction: column; }
+      .filters input, .filters select { width: 100%; }
+      table { font-size: 0.8rem; }
+      th, td { padding: 0.5rem; }
+      .networth-card .value { font-size: 1.8rem; }
+      .donut-chart { flex-direction: column; }
+      .bar-chart-container { height: 200px; }
+      .salary-form { grid-template-columns: 1fr; }
+    }
+
+    /* === Sidebar Layout === */
+    .app-wrapper { display: flex; min-height: 100vh; }
+    .app-wrapper .topbar { display: none; }
+    .app-wrapper .admin-toggle { display: none; }
+    .sidebar-preview {
+      width: 240px; background: var(--sidebar-bg); border-right: 1px solid var(--border-color);
+      display: flex; flex-direction: column; min-height: 100vh; transition: width 0.3s ease;
+    }
+    .sidebar-preview.collapsed { width: 70px; }
+    .sidebar-preview-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem; border-bottom: 1px solid var(--border-color);
+    }
+    .sidebar-preview-brand { font-weight: 700; font-size: 1rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; }
+    .sidebar-preview.collapsed .sidebar-preview-brand-text { display: none; }
+    .sidebar-preview-collapse {
+      background: none; border: 1px solid var(--border-color); border-radius: 6px;
+      padding: 0.3rem 0.5rem; cursor: pointer; color: var(--text-secondary); flex-shrink: 0;
+    }
+    .sidebar-preview-nav { flex: 1; padding: 0.75rem 0.5rem; display: flex; flex-direction: column; gap: 0.25rem; }
+    .sidebar-preview-item {
+      display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.75rem;
+      border-radius: 8px; color: var(--text-primary); cursor: pointer; font-size: 0.88rem;
+      font-weight: 500; transition: all 0.15s; white-space: nowrap; overflow: hidden;
+    }
+    .sidebar-preview-item:hover { background: var(--border-color); }
+    .sidebar-preview-item.active { background: var(--accent-color); color: white; }
+    .sidebar-preview-icon { font-size: 1.15rem; flex-shrink: 0; width: 1.5rem; text-align: center; }
+    .sidebar-preview-label { transition: opacity 0.2s; }
+    .sidebar-preview.collapsed .sidebar-preview-label { opacity: 0; width: 0; overflow: hidden; }
+    .sidebar-preview.collapsed .sidebar-preview-item { justify-content: center; padding: 0.65rem; }
+    .sidebar-preview-footer {
+      padding: 0.75rem; border-top: 1px solid var(--border-color); margin-top: auto;
+    }
+    .sidebar-preview.collapsed .sidebar-footer-label { display: none; }
+    .sidebar-preview.collapsed .sidebar-preview-footer button,
+    .sidebar-preview.collapsed .sidebar-preview-footer div[style*="cursor"] {
+      justify-content: center;
+    }
+    .sidebar-preview-content { flex: 1; }
+    .sidebar-preview-topbar {
+      display: flex; align-items: center; justify-content: flex-end;
+      padding: 0.75rem 1.5rem; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color);
+    }
+    .sidebar-preview-topbar .user {
+      display: flex; align-items: center; gap: 0.6rem; font-size: 0.9rem; position: relative;
+    }
+    .sidebar-preview-topbar .user img {
+      width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border-color);
+    }
+    .sidebar-preview-topbar .user span { color: var(--text-primary); }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <!-- LOGIN PAGE -->
+    <div id="login-page" class="login-page">
+      <div class="login-bg">
+        <div class="login-shape login-shape-1"></div>
+        <div class="login-shape login-shape-2"></div>
+        <div class="login-shape login-shape-3"></div>
+        <div class="login-shape login-shape-4"></div>
+      </div>
+      <div class="login-container">
+        <div class="login-card">
+          <div class="login-logo">
+            <div class="login-logo-icon">💰</div>
+          </div>
+          <h1 class="login-title">Expense Tracker</h1>
+          <p class="login-subtitle">Manage your finances with ease</p>
+          <div class="login-divider"></div>
+          <div class="login-tabs">
+            <button class="login-tab-btn active" data-tab="google">Google</button>
+            <button class="login-tab-btn" data-tab="phone">Phone</button>
+          </div>
+
+          <!-- Google Tab -->
+          <div id="tab-google" class="login-tab-content active">
+            <button id="google-signin-button" class="google-signin-btn">
+              <span>↗</span> Sign in with Google
+            </button>
+          </div>
+
+          <!-- Phone OTP Tab -->
+          <div id="tab-phone" class="login-tab-content">
+            <div class="form-group">
+              <label style="display: block; text-align: left; margin-bottom: 0.5rem;">Phone Number</label>
+              <div class="phone-input-group">
+                <div class="phone-prefix">+91</div>
+                <input type="tel" id="phone-number" placeholder="98765 43210" maxlength="10">
+              </div>
+            </div>
+            <button id="send-otp-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">Send OTP</button>
+
+            <div id="otp-section" style="display: none;">
+              <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 1rem;">Enter the 6-digit OTP sent to your phone</p>
+              <div class="otp-input-group">
+                <input type="text" class="otp-input" maxlength="1" data-index="0">
+                <input type="text" class="otp-input" maxlength="1" data-index="1">
+                <input type="text" class="otp-input" maxlength="1" data-index="2">
+                <input type="text" class="otp-input" maxlength="1" data-index="3">
+                <input type="text" class="otp-input" maxlength="1" data-index="4">
+                <input type="text" class="otp-input" maxlength="1" data-index="5">
+              </div>
+              <button id="verify-otp-btn" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Verify OTP</button>
+            </div>
+          </div>
+
+          <p class="login-privacy">We respect your privacy. Read our <a href="#" style="color:#2563eb">Privacy Policy</a></p>
+        </div>
+        <div class="login-features">
+          <div class="login-feature">
+            <div class="login-feature-icon">📊</div>
+            <div><strong>Track Daily</strong> <span>expenses easily</span></div>
+          </div>
+          <div class="login-feature">
+            <div class="login-feature-icon">💎</div>
+            <div><strong>Savings Goals</strong> <span>and milestones</span></div>
+          </div>
+          <div class="login-feature">
+            <div class="login-feature-icon">🏦</div>
+            <div><strong>Loan Manager</strong> <span>EMI tracking</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="app-container" style="display:none;">
+      <div class="topbar">
+        <div class="topbar-left" id="nav-links-container">
+          <div class="topbar-brand">💰 Expense Tracker</div>
+          <!-- Nav links rendered dynamically from config -->
+        </div>
+        <div class="admin-toggle">
+          <label>View as:</label>
+          <button class="admin-role-btn active" data-role="admin">Admin</button>
+          <button class="admin-role-btn" data-role="user">User</button>
+        </div>
+        <button id="nav-settings-btn" title="Configure Navigation" style="background:none;border:none;cursor:pointer;font-size:1.25rem;color:#94b8ff;padding:0.4rem;border-radius:6px;transition:all 0.15s ease;" onmouseover="this.style.background='rgba(255,255,255,0.1)';this.style.color='#fff'" onmouseout="this.style.background='none';this.style.color='#94b8ff'">⚙️</button>
+        <div class="user">
+          <div class="user-trigger" id="user-trigger">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23667eea'/%3E%3C/svg%3E" alt="Avatar">
+            <span id="user-trigger-name">Vijay Kumar</span>
+          </div>
+          <div class="user-dropdown" id="user-dropdown">
+            <div class="user-dropdown-header">
+              <div class="user-dropdown-avatar">👤</div>
+              <div class="user-dropdown-info">
+                <div class="user-dropdown-name">Vijay Kumar</div>
+                <div class="user-dropdown-role" id="dropdown-user-role">ADMIN</div>
+              </div>
+            </div>
+            <div class="user-dropdown-body">
+              <div class="user-dropdown-field">
+                <div class="user-dropdown-label">Email</div>
+                <div class="user-dropdown-value">vijay@example.com</div>
+              </div>
+              <div class="user-dropdown-field">
+                <div class="user-dropdown-label">Phone</div>
+                <div class="user-dropdown-value">+91 98765 43210</div>
+              </div>
+              <div class="user-dropdown-field">
+                <div class="user-dropdown-label">Member Since</div>
+                <div class="user-dropdown-value">Jan 2025</div>
+              </div>
+            </div>
+            <div class="user-dropdown-prefs" style="padding:1rem 1.25rem;border-bottom:1px solid var(--border-color);">
+              <div style="font-weight:600;font-size:0.8rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:0.75rem;">Preferences</div>
+              <div style="margin-bottom:0.75rem;">
+                <div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:0.35rem;">Theme</div>
+                <div id="theme-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.4rem;">
+                  <button class="pref-theme-btn active" data-theme-val="light" style="padding:0.4rem 0.5rem;border:2px solid var(--accent-color);border-radius:6px;background:var(--bg-secondary);cursor:pointer;font-size:0.75rem;font-weight:500;color:var(--text-primary);transition:all 0.15s;">☀️ Light</button>
+                  <button class="pref-theme-btn" data-theme-val="dark" style="padding:0.4rem 0.5rem;border:2px solid transparent;border-radius:6px;background:#1f2937;cursor:pointer;font-size:0.75rem;font-weight:500;color:#e2e8f0;transition:all 0.15s;">🌙 Dark</button>
+                  <button class="pref-theme-btn" data-theme-val="blue" style="padding:0.4rem 0.5rem;border:2px solid transparent;border-radius:6px;background:#eff6ff;cursor:pointer;font-size:0.75rem;font-weight:500;color:#1e3a8a;transition:all 0.15s;">🌊 Blue</button>
+                  <button class="pref-theme-btn" data-theme-val="green" style="padding:0.4rem 0.5rem;border:2px solid transparent;border-radius:6px;background:#ecfdf5;cursor:pointer;font-size:0.75rem;font-weight:500;color:#065f46;transition:all 0.15s;">🌿 Green</button>
+                  <button class="pref-theme-btn" data-theme-val="purple" style="padding:0.4rem 0.5rem;border:2px solid transparent;border-radius:6px;background:#faf5ff;cursor:pointer;font-size:0.75rem;font-weight:500;color:#581c87;transition:all 0.15s;">👑 Purple</button>
+                  <button class="pref-theme-btn" data-theme-val="sunset" style="padding:0.4rem 0.5rem;border:2px solid transparent;border-radius:6px;background:#fff7ed;cursor:pointer;font-size:0.75rem;font-weight:500;color:#7c2d12;transition:all 0.15s;">🌅 Sunset</button>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:0.35rem;">Navigation Layout</div>
+                <div style="display:flex;gap:0.5rem;">
+                  <button class="pref-layout-btn active" data-layout-val="top" style="flex:1;padding:0.5rem;border:2px solid var(--accent-color);border-radius:8px;background:var(--bg-secondary);cursor:pointer;font-size:0.75rem;font-weight:500;color:var(--text-primary);transition:all 0.15s;text-align:center;">⬆ Top Bar</button>
+                  <button class="pref-layout-btn" data-layout-val="sidebar" style="flex:1;padding:0.5rem;border:2px solid transparent;border-radius:8px;background:var(--bg-secondary);cursor:pointer;font-size:0.75rem;font-weight:500;color:var(--text-primary);transition:all 0.15s;text-align:center;">◀ Sidebar</button>
+                </div>
+              </div>
+            </div>
+            <div class="user-dropdown-footer">
+              <button id="logout-btn" class="user-dropdown-logout">Logout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="app">
+        <!-- DASHBOARD PAGE -->
+        <div id="page-dashboard" class="page active">
+          <div class="page-header">
+            <h2>Dashboard</h2>
+          </div>
+          <div class="layout-toolbar">
+            <label>Layout:</label>
+            <button class="layout-btn active" data-layout="default">⊞ Default</button>
+            <button class="layout-btn" data-layout="compact">⊟ Compact</button>
+            <button class="layout-btn" data-layout="sidebar">⊣ Sidebar</button>
+          </div>
+          <div class="month-nav">
+            <button class="btn btn-secondary prev-month">← Prev</button>
+            <span id="current-month">March 2026</span>
+            <button class="btn btn-secondary next-month">Next →</button>
+          </div>
+          <div class="cards" id="dashboard-cards">
+            <div class="card savings" draggable="true" data-card-id="savings">
+              <div class="card-drag-handle">⋮⋮</div>
+              <h3>Monthly Savings</h3>
+              <div class="amount">₹49,500</div>
+            </div>
+            <div class="card loans" draggable="true" data-card-id="loans">
+              <div class="card-drag-handle">⋮⋮</div>
+              <h3>Active Loans</h3>
+              <div class="amount">₹18,50,000</div>
+            </div>
+            <div class="card expenses" draggable="true" data-card-id="expenses">
+              <div class="card-drag-handle">⋮⋮</div>
+              <h3>Total Expenses</h3>
+              <div class="amount">₹32,500</div>
+            </div>
+          </div>
+          <div class="quick-actions">
+            <button class="btn btn-primary">+ Add Expense</button>
+            <button class="btn btn-outline">Set Budget</button>
+            <button class="btn btn-outline">View Reports</button>
+          </div>
+        </div>
+
+        <!-- EXPENSES PAGE -->
+        <div id="page-expenses" class="page">
+          <div class="page-header">
+            <h2>Expenses</h2>
+            <button class="btn btn-primary btn-sm">+ Add Expense</button>
+          </div>
+          <div class="filters">
+            <div class="search-bar" style="flex: 0 1 auto; max-width: 250px;">
+              <input type="text" placeholder="Search expenses...">
+            </div>
+            <select>
+              <option>All Categories</option>
+              <option>Daily</option>
+              <option>Home</option>
+              <option>Cosmetics</option>
+              <option>Trip</option>
+            </select>
+            <input type="date" value="2026-02-01">
+            <input type="date" value="2026-03-09">
+            <button class="btn btn-export btn-sm">Export CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Date</th><th>Category</th><th>Amount</th><th>Currency</th><th>Notes</th><th>Actions</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>2026-03-08</td><td><span class="cat-badge cat-daily">Daily</span></td><td>₹450</td><td>INR</td><td>Coffee & Snacks</td><td>✎ 🗑</td></tr>
+                <tr><td>2026-03-07</td><td><span class="cat-badge cat-home">Home</span></td><td>₹5,200</td><td>INR</td><td>Grocery Shopping</td><td>✎ 🗑</td></tr>
+                <tr><td>2026-03-06</td><td><span class="cat-badge cat-cosmetics">Cosmetics</span></td><td>₹1,800</td><td>INR</td><td>Skincare Products</td><td>✎ 🗑</td></tr>
+                <tr><td>2026-03-05</td><td><span class="cat-badge cat-daily">Daily</span></td><td>₹650</td><td>INR</td><td>Lunch</td><td>✎ 🗑</td></tr>
+                <tr><td>2026-03-04</td><td><span class="cat-badge cat-trip">Trip</span></td><td>₹8,500</td><td>INR</td><td>Hotel Booking</td><td>✎ 🗑</td></tr>
+                <tr><td>2026-03-03</td><td><span class="cat-badge cat-daily">Daily</span></td><td>₹350</td><td>INR</td><td>Breakfast</td><td>✎ 🗑</td></tr>
+                <tr><td>2026-03-02</td><td><span class="cat-badge cat-home">Home</span></td><td>₹2,500</td><td>INR</td><td>Electricity Bill</td><td>✎ 🗑</td></tr>
+                <tr><td>2026-03-01</td><td><span class="cat-badge cat-daily">Daily</span></td><td>₹525</td><td>INR</td><td>Petrol</td><td>✎ 🗑</td></tr>
+                <tr style="font-weight:600; background:#f9fafb;"><td colspan="3">Total Expenses</td><td>INR</td><td colspan="2">₹19,975</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- INVESTMENTS PAGE -->
+        <div id="page-investments" class="page">
+          <div class="page-header">
+            <h2>Investments</h2>
+            <button class="btn btn-export btn-sm">Export CSV</button>
+          </div>
+          <div class="summary-cards">
+            <div class="summary-card">
+              <h3>Total Invested</h3>
+              <div class="value">₹4,50,000</div>
+            </div>
+            <div class="summary-card">
+              <h3>Current Value</h3>
+              <div class="value">₹5,12,300</div>
+            </div>
+            <div class="summary-card">
+              <h3>Gain/Loss</h3>
+              <div class="value gain">+₹62,300 (+13.8%)</div>
+            </div>
+          </div>
+          <div class="filters">
+            <select>
+              <option>All Types</option>
+              <option>Mutual Funds</option>
+              <option>PPF</option>
+              <option>NPS</option>
+              <option>RD</option>
+              <option>Stocks</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Investment Name</th><th>Type</th><th>Invested</th><th>Current Value</th><th>Gain/Loss</th><th>Entry Date</th><th>Actions</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>SBI Bluechip MF</td><td>Mutual Funds</td><td>₹1,50,000</td><td>₹1,82,500</td><td><span class="text-gain">+₹32,500 (+21.7%)</span></td><td>2024-01-15</td><td>✎ 🗑</td></tr>
+                <tr><td>PPF Account</td><td>PPF</td><td>₹1,50,000</td><td>₹1,68,200</td><td><span class="text-gain">+₹18,200 (+12.1%)</span></td><td>2023-06-20</td><td>✎ 🗑</td></tr>
+                <tr><td>NPS Tier-I</td><td>NPS</td><td>₹1,00,000</td><td>₹1,25,600</td><td><span class="text-gain">+₹25,600 (+25.6%)</span></td><td>2023-09-10</td><td>✎ 🗑</td></tr>
+                <tr><td>SBI RD 3-Year</td><td>RD</td><td>₹50,000</td><td>₹54,600</td><td><span class="text-gain">+₹4,600 (+9.2%)</span></td><td>2023-12-01</td><td>✎ 🗑</td></tr>
+                <tr><td>Reliance Industries</td><td>Stocks</td><td>₹50,000</td><td>₹48,900</td><td><span class="text-loss">-₹1,100 (-2.2%)</span></td><td>2025-02-05</td><td>✎ 🗑</td></tr>
+                <tr><td>Nifty 50 Index Fund</td><td>Mutual Funds</td><td>₹1,00,000</td><td>₹1,24,500</td><td><span class="text-gain">+₹24,500 (+24.5%)</span></td><td>2024-03-12</td><td>✎ 🗑</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SALARY PAGE -->
+        <div id="page-salary" class="page">
+          <div class="page-header">
+            <h2>Salary Tracker</h2>
+            <button class="btn btn-export btn-sm">Export CSV</button>
+          </div>
+          <div class="form-section">
+            <h3 style="margin-bottom: 1rem; font-size: 1rem; font-weight: 600;">Add New Salary Entry</h3>
+            <div class="salary-form">
+              <div class="form-group">
+                <label>Month</label>
+                <input type="month" value="2026-03">
+              </div>
+              <div class="form-group">
+                <label>Gross Amount (₹)</label>
+                <input type="number" placeholder="0" value="85000">
+              </div>
+              <div class="form-group">
+                <label>Deductions (₹)</label>
+                <input type="number" placeholder="0" value="12500">
+              </div>
+              <div class="form-group">
+                <label>Net Amount (₹)</label>
+                <input type="number" placeholder="Auto-calculated" value="72500" disabled style="background: #f3f4f6; color: #6b7280;">
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary">Save Salary</button>
+              <button class="btn btn-outline">Clear</button>
+            </div>
+          </div>
+
+          <div class="chart-wrap">
+            <h3>Monthly Net Salary Trend (Last 12 Months)</h3>
+            <div class="bar-chart-container">
+              <div class="bar-col"><div class="bar-fill" style="height: 75%;"><span class="bar-tooltip">₹65K</span></div><div class="bar-label">Mar '25</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height: 76%;"><span class="bar-tooltip">₹66K</span></div><div class="bar-label">Apr '25</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height: 77%;"><span class="bar-tooltip">₹67K</span></div><div class="bar-label">May '25</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height: 78%;"><span class="bar-tooltip">₹68K</span></div><div class="bar-label">Jun '25</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height: 79%;"><span class="bar-tooltip">₹69K</span></div><div class="bar-label">Jul '25</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height: 80%;"><span class="bar-tooltip">₹70K</span></div><div class="bar-label">Aug '25</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height: 81%;"><span class="bar-tooltip">₹71K</span></div><div class="bar-label">Sep '25</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height: 82%;"><span class="bar-tooltip">₹72K</span></div><div class="bar-label">Oct '25</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height: 83%;"><span class="bar-tooltip">₹72.5K</span></div><div class="bar-label">Nov '25</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height: 84%;"><span class="bar-tooltip">₹73K</span></div><div class="bar-label">Dec '25</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height: 85%;"><span class="bar-tooltip">₹74K</span></div><div class="bar-label">Jan '26</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height: 86%;"><span class="bar-tooltip">₹72.5K</span></div><div class="bar-label">Mar '26</div></div>
+            </div>
+          </div>
+
+          <div class="summary-cards" style="margin-top: 1.5rem;">
+            <div class="summary-card">
+              <h3>Average Net Salary</h3>
+              <div class="value">₹70,208</div>
+            </div>
+            <div class="summary-card">
+              <h3>Total Earned (YTD)</h3>
+              <div class="value">₹2,10,625</div>
+            </div>
+          </div>
+
+          <div class="table-wrap" style="margin-top: 1.5rem;">
+            <table>
+              <thead>
+                <tr><th>Month</th><th>Gross Amount</th><th>Deductions</th><th>Net Amount</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>March 2026</td><td>₹85,000</td><td>₹12,500</td><td>₹72,500</td></tr>
+                <tr><td>February 2026</td><td>₹85,000</td><td>₹12,500</td><td>₹72,500</td></tr>
+                <tr><td>January 2026</td><td>₹85,000</td><td>₹11,000</td><td>₹74,000</td></tr>
+                <tr><td>December 2025</td><td>₹85,000</td><td>₹12,000</td><td>₹73,000</td></tr>
+                <tr><td>November 2025</td><td>₹85,000</td><td>₹12,500</td><td>₹72,500</td></tr>
+                <tr><td>October 2025</td><td>₹85,000</td><td>₹12,500</td><td>₹72,500</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- DEBTS PAGE -->
+        <div id="page-debts" class="page">
+          <div class="page-header">
+            <h2>Debts & Loans</h2>
+            <button class="btn btn-export btn-sm">Export CSV</button>
+          </div>
+          <div class="summary-cards">
+            <div class="summary-card">
+              <h3>Total Remaining</h3>
+              <div class="value">₹12,45,000</div>
+            </div>
+            <div class="summary-card">
+              <h3>Active Debts</h3>
+              <div class="value">3</div>
+            </div>
+            <div class="summary-card">
+              <h3>Monthly EMI Total</h3>
+              <div class="value">₹28,500</div>
+            </div>
+          </div>
+          <div class="filter-btns">
+            <button class="filter-btn active">All</button>
+            <button class="filter-btn">Active</button>
+            <button class="filter-btn">Paid Off</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Name</th><th>Type</th><th>Principal</th><th>Remaining</th><th>EMI</th><th>Rate %</th><th>Status</th><th>Actions</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Home Loan - SBI</td><td>Home Loan</td><td>₹25,00,000</td><td>₹10,50,000</td><td>₹22,000</td><td>6.5%</td><td><span class="badge badge-active">Active</span></td><td>✎ 🗑</td></tr>
+                <tr><td>Car Loan - HDFC</td><td>Car Loan</td><td>₹8,00,000</td><td>₹1,95,000</td><td>₹5,500</td><td>8.2%</td><td><span class="badge badge-active">Active</span></td><td>✎ 🗑</td></tr>
+                <tr><td>Personal Loan</td><td>Personal</td><td>₹5,00,000</td><td>₹0</td><td>₹0</td><td>9.0%</td><td><span class="badge badge-paid-off">Paid Off</span></td><td>✎ 🗑</td></tr>
+                <tr><td>Credit Card Balance</td><td>Credit Card</td><td>₹2,00,000</td><td>₹1,000</td><td>₹1,000</td><td>18.0%</td><td><span class="badge badge-active">Active</span></td><td>✎ 🗑</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ANALYTICS PAGE -->
+        <div id="page-analytics" class="page">
+          <div class="page-header">
+            <h2>Analytics</h2>
+          </div>
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="monthly">Monthly</button>
+            <button class="tab-btn" data-tab="yearly">Yearly</button>
+            <button class="tab-btn" data-tab="alltime">All-Time</button>
+          </div>
+
+          <!-- MONTHLY TAB -->
+          <div id="tab-monthly" class="tab-content active">
+            <div class="analytics-cards">
+              <div class="analytics-card">
+                <div class="label">Total Salary</div>
+                <div class="value">₹72,500</div>
+              </div>
+              <div class="analytics-card">
+                <div class="label">Total Expenses</div>
+                <div class="value">₹19,975</div>
+              </div>
+              <div class="analytics-card">
+                <div class="label">Amount Saved</div>
+                <div class="value positive">₹52,525</div>
+              </div>
+              <div class="analytics-card">
+                <div class="label">Savings Rate</div>
+                <div class="value positive">72.5%</div>
+              </div>
+            </div>
+
+            <div class="chart-wrap">
+              <h3>Expense Breakdown by Category</h3>
+              <div class="h-bar-chart">
+                <div class="h-bar-row">
+                  <div class="h-bar-label">Daily</div>
+                  <div class="h-bar-track"><div class="h-bar-fill" style="width: 35%; background: linear-gradient(90deg, #3b82f6, #60a5fa);">35%</div></div>
+                  <div class="h-bar-amount">₹7,000</div>
+                </div>
+                <div class="h-bar-row">
+                  <div class="h-bar-label">Home</div>
+                  <div class="h-bar-track"><div class="h-bar-fill" style="width: 25%; background: linear-gradient(90deg, #f59e0b, #fbbf24);">25%</div></div>
+                  <div class="h-bar-amount">₹5,000</div>
+                </div>
+                <div class="h-bar-row">
+                  <div class="h-bar-label">Savings</div>
+                  <div class="h-bar-track"><div class="h-bar-fill" style="width: 20%; background: linear-gradient(90deg, #10b981, #34d399);">20%</div></div>
+                  <div class="h-bar-amount">₹4,000</div>
+                </div>
+                <div class="h-bar-row">
+                  <div class="h-bar-label">Loans</div>
+                  <div class="h-bar-track"><div class="h-bar-fill" style="width: 15%; background: linear-gradient(90deg, #ef4444, #f87171);">15%</div></div>
+                  <div class="h-bar-amount">₹3,000</div>
+                </div>
+                <div class="h-bar-row">
+                  <div class="h-bar-label">Other</div>
+                  <div class="h-bar-track"><div class="h-bar-fill" style="width: 5%; background: linear-gradient(90deg, #8b5cf6, #a78bfa);">5%</div></div>
+                  <div class="h-bar-amount">₹975</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- YEARLY TAB -->
+          <div id="tab-yearly" class="tab-content">
+            <div class="analytics-cards">
+              <div class="analytics-card">
+                <div class="label">Total Income</div>
+                <div class="value">₹8,70,000</div>
+              </div>
+              <div class="analytics-card">
+                <div class="label">Total Expenses</div>
+                <div class="value">₹2,40,000</div>
+              </div>
+              <div class="analytics-card">
+                <div class="label">Total Saved</div>
+                <div class="value positive">₹6,30,000</div>
+              </div>
+              <div class="analytics-card">
+                <div class="label">Avg Monthly Savings</div>
+                <div class="value positive">₹52,500</div>
+              </div>
+            </div>
+
+            <div class="chart-wrap">
+              <h3>Monthly Savings Trend (2025)</h3>
+              <svg class="chart-svg" viewBox="0 0 800 300" style="height: 250px;">
+                <defs><linearGradient id="lineGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#2563eb;stop-opacity:0.3" /><stop offset="100%" style="stop-color:#2563eb;stop-opacity:0.01" /></linearGradient></defs>
+                <line x1="40" y1="250" x2="760" y2="250" class="chart-grid"/>
+                <line x1="40" y1="200" x2="760" y2="200" class="chart-grid"/>
+                <line x1="40" y1="150" x2="760" y2="150" class="chart-grid"/>
+                <line x1="40" y1="100" x2="760" y2="100" class="chart-grid"/>
+                <line x1="40" y1="50" x2="760" y2="50" class="chart-grid"/>
+                <line x1="40" y1="20" x2="40" y2="250" class="chart-grid"/>
+                <polyline points="40,150 100,120 160,100 220,140 280,180 340,100 400,160 460,140 520,180 580,160 640,140 700,120 760,110" class="chart-line" fill="url(#lineGrad)" stroke="#2563eb" stroke-width="3"/>
+                <circle cx="40" cy="150" r="4" class="chart-dot"/><circle cx="100" cy="120" r="4" class="chart-dot"/><circle cx="160" cy="100" r="4" class="chart-dot"/><circle cx="220" cy="140" r="4" class="chart-dot"/><circle cx="280" cy="180" r="4" class="chart-dot"/><circle cx="340" cy="100" r="4" class="chart-dot"/><circle cx="400" cy="160" r="4" class="chart-dot"/><circle cx="460" cy="140" r="4" class="chart-dot"/><circle cx="520" cy="180" r="4" class="chart-dot"/><circle cx="580" cy="160" r="4" class="chart-dot"/><circle cx="640" cy="140" r="4" class="chart-dot"/><circle cx="700" cy="120" r="4" class="chart-dot"/><circle cx="760" cy="110" r="4" class="chart-dot"/>
+                <text x="35" y="270" class="chart-axis-text">Jan</text><text x="95" y="270" class="chart-axis-text">Feb</text><text x="155" y="270" class="chart-axis-text">Mar</text><text x="215" y="270" class="chart-axis-text">Apr</text><text x="275" y="270" class="chart-axis-text">May</text><text x="335" y="270" class="chart-axis-text">Jun</text><text x="395" y="270" class="chart-axis-text">Jul</text><text x="455" y="270" class="chart-axis-text">Aug</text><text x="515" y="270" class="chart-axis-text">Sep</text><text x="575" y="270" class="chart-axis-text">Oct</text><text x="635" y="270" class="chart-axis-text">Nov</text><text x="695" y="270" class="chart-axis-text">Dec</text>
+              </svg>
+            </div>
+
+            <div class="chart-wrap">
+              <h3>Category Breakdown (Yearly)</h3>
+              <div class="donut-chart">
+                <svg class="chart-svg" viewBox="0 0 200 200" style="width: 180px; height: 180px;">
+                  <circle cx="100" cy="100" r="60" fill="none" stroke="#3b82f6" stroke-width="20" stroke-dasharray="62.8 314" transform="rotate(-90 100 100)"/>
+                  <circle cx="100" cy="100" r="60" fill="none" stroke="#f59e0b" stroke-width="20" stroke-dasharray="47.1 314" stroke-dashoffset="-62.8" transform="rotate(-90 100 100)"/>
+                  <circle cx="100" cy="100" r="60" fill="none" stroke="#10b981" stroke-width="20" stroke-dasharray="37.68 314" stroke-dashoffset="-109.9" transform="rotate(-90 100 100)"/>
+                  <circle cx="100" cy="100" r="60" fill="none" stroke="#ef4444" stroke-width="20" stroke-dasharray="28.26 314" stroke-dashoffset="-147.58" transform="rotate(-90 100 100)"/>
+                  <circle cx="100" cy="100" r="60" fill="none" stroke="#8b5cf6" stroke-width="20" stroke-dasharray="9.42 314" stroke-dashoffset="-175.84" transform="rotate(-90 100 100)"/>
+                  <text x="100" y="100" text-anchor="middle" dy="0.3em" style="font-size: 20px; font-weight: 700; fill: #1a1a2e;">60%</text>
+                </svg>
+                <div class="donut-legend">
+                  <div class="donut-legend-item"><div class="donut-legend-color" style="background: #3b82f6;"></div> Daily (35%)</div>
+                  <div class="donut-legend-item"><div class="donut-legend-color" style="background: #f59e0b;"></div> Home (25%)</div>
+                  <div class="donut-legend-item"><div class="donut-legend-color" style="background: #10b981;"></div> Savings (20%)</div>
+                  <div class="donut-legend-item"><div class="donut-legend-color" style="background: #ef4444;"></div> Loans (15%)</div>
+                  <div class="donut-legend-item"><div class="donut-legend-color" style="background: #8b5cf6;"></div> Other (5%)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ALL-TIME TAB -->
+          <div id="tab-alltime" class="tab-content">
+            <div class="networth-card">
+              <div class="label">Net Worth</div>
+              <div class="value">₹8,45,000</div>
+              <div class="growth">↑ 12.5% YoY</div>
+            </div>
+
+            <div class="chart-wrap">
+              <h3>Investments vs Debt Comparison</h3>
+              <div class="comparison-bars">
+                <div class="comparison-bar-row">
+                  <div class="comparison-bar-label">Investments</div>
+                  <div class="comparison-bar-track"><div class="comparison-bar-fill invest" style="width: 65%;">₹5,12,300</div></div>
+                </div>
+                <div class="comparison-bar-row">
+                  <div class="comparison-bar-label">Debts</div>
+                  <div class="comparison-bar-track"><div class="comparison-bar-fill debt" style="width: 35%;">₹2,87,000</div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="analytics-cards">
+              <div class="analytics-card">
+                <div class="label">Total Investments</div>
+                <div class="value">₹5,12,300</div>
+              </div>
+              <div class="analytics-card">
+                <div class="label">Total Debts</div>
+                <div class="value">₹2,87,000</div>
+              </div>
+              <div class="analytics-card">
+                <div class="label">Cumulative Savings</div>
+                <div class="value positive">₹6,30,000</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RECURRING TRANSACTIONS PAGE -->
+        <div id="page-recurring" class="page">
+          <div class="page-header">
+            <h2>Recurring Transactions</h2>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-primary btn-sm">Process Due</button>
+              <button class="btn btn-primary btn-sm">+ Add</button>
+            </div>
+          </div>
+
+          <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #e5e7eb;">
+            <div style="font-size: 0.9rem; color: #6b7280;"><strong style="color: #1a1a2e;">Total Monthly Recurring:</strong> ₹15,500</div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Name</th><th>Category</th><th>Amount</th><th>Frequency</th><th>Next Due</th><th>Status</th><th>Actions</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Rent</td><td><span class="cat-badge cat-home">Home</span></td><td>₹8,000</td><td>Monthly</td><td>2026-04-01</td><td><span class="status-toggle"><span class="status-dot active"></span>Active</span></td><td>✎ 🗑</td></tr>
+                <tr><td>Netflix Subscription</td><td><span class="cat-badge cat-daily">Daily</span></td><td>₹649</td><td>Monthly</td><td>2026-03-15</td><td><span class="status-toggle"><span class="status-dot active"></span>Active</span></td><td>✎ 🗑</td></tr>
+                <tr><td>Gym Membership</td><td><span class="cat-badge cat-daily">Daily</span></td><td>₹1,500</td><td>Monthly</td><td>2026-03-10</td><td><span class="status-toggle"><span class="status-dot active"></span>Active</span></td><td>✎ 🗑</td></tr>
+                <tr><td>Health Insurance</td><td><span class="cat-badge cat-savings">Savings</span></td><td>₹2,500</td><td>Quarterly</td><td>2026-04-15</td><td><span class="status-toggle"><span class="status-dot active"></span>Active</span></td><td>✎ 🗑</td></tr>
+                <tr><td>SIP - Mutual Fund</td><td><span class="cat-badge cat-savings">Savings</span></td><td>₹5,000</td><td>Monthly</td><td>2026-03-05</td><td><span class="status-toggle"><span class="status-dot active"></span>Active</span></td><td>✎ 🗑</td></tr>
+                <tr><td>Mobile Bill</td><td><span class="cat-badge cat-daily">Daily</span></td><td>₹599</td><td>Monthly</td><td>2026-03-20</td><td><span class="status-toggle"><span class="status-dot inactive"></span>Inactive</span></td><td>✎ 🗑</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- BUDGETS PAGE -->
+        <div id="page-budgets" class="page">
+          <div class="page-header">
+            <h2>Budget Manager</h2>
+          </div>
+
+          <!-- Budget Status Section -->
+          <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; font-size: 1rem; font-weight: 600;">Budget Status - March 2026</h3>
+          <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid #e5e7eb;">
+            <div class="progress-bar-container">
+              <div class="progress-bar-header">
+                <span>Daily Expenses</span>
+                <span>₹8,500 / ₹12,000 (70%)</span>
+              </div>
+              <div class="progress-bar-track"><div class="progress-bar-fill yellow" style="width: 70%;">70%</div></div>
+            </div>
+
+            <div class="progress-bar-container">
+              <div class="progress-bar-header">
+                <span>Home</span>
+                <span>₹5,200 / ₹8,000 (65%)</span>
+              </div>
+              <div class="progress-bar-track"><div class="progress-bar-fill yellow" style="width: 65%;">65%</div></div>
+            </div>
+
+            <div class="progress-bar-container">
+              <div class="progress-bar-header">
+                <span>Cosmetics</span>
+                <span>₹1,800 / ₹2,000 (90%)</span>
+              </div>
+              <div class="progress-bar-track"><div class="progress-bar-fill red" style="width: 90%;">90%</div></div>
+            </div>
+
+            <div class="progress-bar-container">
+              <div class="progress-bar-header">
+                <span>Trip</span>
+                <span>₹0 / ₹5,000 (0%)</span>
+              </div>
+              <div class="progress-bar-track"><div class="progress-bar-fill green" style="width: 5%;">0%</div></div>
+            </div>
+
+            <div class="progress-bar-container">
+              <div class="progress-bar-header">
+                <span>Savings</span>
+                <span>₹10,000 / ₹15,000 (67%)</span>
+              </div>
+              <div class="progress-bar-track"><div class="progress-bar-fill yellow" style="width: 67%;">67%</div></div>
+            </div>
+          </div>
+
+          <!-- Manage Budgets Section -->
+          <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1rem; font-weight: 600;">Manage Budgets</h3>
+          <div class="form-section">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+              <div class="form-group">
+                <label>Category</label>
+                <select>
+                  <option>Daily</option>
+                  <option>Home</option>
+                  <option>Cosmetics</option>
+                  <option>Trip</option>
+                  <option>Savings</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Monthly Limit (₹)</label>
+                <input type="number" placeholder="10000">
+              </div>
+              <div class="form-group">
+                <label>Alert Threshold (%)</label>
+                <input type="number" placeholder="80" value="80">
+              </div>
+              <div class="form-group">
+                <label>Month (Optional)</label>
+                <input type="month" value="2026-03">
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary">Save Budget</button>
+              <button class="btn btn-outline">Reset</button>
+            </div>
+          </div>
+
+          <div class="table-wrap" style="margin-top: 1.5rem;">
+            <table>
+              <thead>
+                <tr><th>Category</th><th>Monthly Limit</th><th>Alert Threshold</th><th>Month</th><th>Actions</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><span class="cat-badge cat-daily">Daily</span></td><td>₹12,000</td><td>80%</td><td>March 2026</td><td>✎ 🗑</td></tr>
+                <tr><td><span class="cat-badge cat-home">Home</span></td><td>₹8,000</td><td>80%</td><td>March 2026</td><td>✎ 🗑</td></tr>
+                <tr><td><span class="cat-badge cat-cosmetics">Cosmetics</span></td><td>₹2,000</td><td>85%</td><td>March 2026</td><td>✎ 🗑</td></tr>
+                <tr><td><span class="cat-badge cat-trip">Trip</span></td><td>₹5,000</td><td>75%</td><td>March 2026</td><td>✎ 🗑</td></tr>
+                <tr><td><span class="cat-badge cat-savings">Savings</span></td><td>₹15,000</td><td>90%</td><td>March 2026</td><td>✎ 🗑</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ADMIN PAGE -->
+        <div id="page-admin" class="page">
+          <div class="page-header">
+            <h2>Admin Dashboard</h2>
+          </div>
+
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="admin-users">Users</button>
+            <button class="tab-btn" data-tab="admin-history">Login History</button>
+          </div>
+
+          <!-- Users Tab -->
+          <div id="tab-admin-users" class="tab-content active">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Email</th><th>Name</th><th>Role</th><th>Created At</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>vijay@example.com</td><td>Vijay Kumar</td><td><span class="badge badge-active">Admin</span></td><td>2025-01-15</td></tr>
+                  <tr><td>priya@example.com</td><td>Priya Singh</td><td><span class="badge badge-paid-off" style="background: #e0f2fe; color: #0369a1; border: 1px solid #a5f3fc;">User</span></td><td>2025-02-20</td></tr>
+                  <tr><td>amit@example.com</td><td>Amit Patel</td><td><span class="badge badge-paid-off" style="background: #e0f2fe; color: #0369a1; border: 1px solid #a5f3fc;">User</span></td><td>2025-02-28</td></tr>
+                  <tr><td>sneha@example.com</td><td>Sneha Sharma</td><td><span class="badge badge-paid-off" style="background: #e0f2fe; color: #0369a1; border: 1px solid #a5f3fc;">User</span></td><td>2026-01-10</td></tr>
+                  <tr><td>rahul@example.com</td><td>Rahul Verma</td><td><span class="badge badge-paid-off" style="background: #e0f2fe; color: #0369a1; border: 1px solid #a5f3fc;">User</span></td><td>2026-02-05</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Login History Tab -->
+          <div id="tab-admin-history" class="tab-content">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>User Email</th><th>Timestamp</th><th>IP Address</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>vijay@example.com</td><td>2026-03-09 14:35:22</td><td>192.168.1.105</td></tr>
+                  <tr><td>priya@example.com</td><td>2026-03-09 13:22:45</td><td>203.0.113.42</td></tr>
+                  <tr><td>amit@example.com</td><td>2026-03-09 11:15:30</td><td>198.51.100.78</td></tr>
+                  <tr><td>vijay@example.com</td><td>2026-03-08 16:48:12</td><td>192.168.1.105</td></tr>
+                  <tr><td>sneha@example.com</td><td>2026-03-08 09:30:15</td><td>207.142.131.201</td></tr>
+                  <tr><td>rahul@example.com</td><td>2026-03-07 15:25:38</td><td>185.89.215.66</td></tr>
+                  <tr><td>vijay@example.com</td><td>2026-03-07 10:45:20</td><td>192.168.1.105</td></tr>
+                  <tr><td>priya@example.com</td><td>2026-03-06 14:12:45</td><td>203.0.113.42</td></tr>
+                  <tr><td>amit@example.com</td><td>2026-03-06 08:55:33</td><td>198.51.100.78</td></tr>
+                  <tr><td>vijay@example.com</td><td>2026-03-05 17:20:10</td><td>192.168.1.105</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav Config Panel -->
+  <div id="nav-config-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:999;" onclick="closeNavConfig()"></div>
+  <div id="nav-config-panel" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-secondary);border-radius:16px;padding:1.5rem;min-width:380px;max-width:480px;z-index:1000;box-shadow:0 20px 60px rgba(0,0,0,0.25);max-height:80vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+      <h3 style="font-size:1.1rem;font-weight:700;color:var(--text-primary);">Customize Navigation</h3>
+      <button id="nav-config-close" style="background:none;border:none;font-size:1.25rem;cursor:pointer;color:var(--text-secondary);">✕</button>
+    </div>
+    <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:1rem;">Drag to reorder. Double-click labels to rename. Click icons or colors to change.</p>
+    <div id="nav-config-items"></div>
+    <div style="display:flex;gap:0.75rem;margin-top:1.25rem;">
+      <button id="nav-config-save" class="btn btn-primary" style="flex:1;">Save</button>
+      <button id="nav-config-reset" class="btn btn-secondary">Reset</button>
+    </div>
+  </div>
+
+  <script>
+    // ===== CONFIGURABLE NAV =====
+    const ICON_OPTIONS = ['📊', '💰', '📈', '💵', '🏦', '📉', '🏠', '💳', '📋', '⚡', '🎯', '💎'];
+    const COLOR_OPTIONS = ['#2563eb', '#059669', '#7c3aed', '#d97706', '#dc2626', '#0891b2', '#ec4899', '#6366f1'];
+    const DEFAULT_NAV_CONFIG = [
+      { id: 'dashboard', label: 'Dashboard', icon: '📊', color: '#2563eb', visible: true },
+      { id: 'expenses', label: 'Expenses', icon: '💰', color: '#059669', visible: true },
+      { id: 'investments', label: 'Investments', icon: '📈', color: '#7c3aed', visible: true },
+      { id: 'salary', label: 'Salary', icon: '💵', color: '#d97706', visible: true },
+      { id: 'debts', label: 'Debts', icon: '🏦', color: '#dc2626', visible: true },
+      { id: 'analytics', label: 'Analytics', icon: '📉', color: '#0891b2', visible: true },
+      { id: 'recurring', label: 'Recurring', icon: '🔄', color: '#6366f1', visible: true },
+      { id: 'budgets', label: 'Budgets', icon: '🎯', color: '#ec4899', visible: true },
+    ];
+
+    let isAdmin = true;
+    let navConfig = JSON.parse(JSON.stringify(DEFAULT_NAV_CONFIG));
+    try {
+      const stored = localStorage.getItem('preview-nav-config');
+      if (stored) navConfig = JSON.parse(stored);
+    } catch(e) {}
+
+    function renderNavLinks() {
+      const container = document.getElementById('nav-links-container');
+      container.innerHTML = '<div class="topbar-brand">💰 Expense Tracker</div>';
+      const currentActive = document.querySelector('.page.active');
+      const activePageId = currentActive ? currentActive.id.replace('page-', '') : 'dashboard';
+
+      navConfig.filter(n => n.visible).forEach(item => {
+        const a = document.createElement('a');
+        a.href = '#';
+        a.className = 'nav-link' + (item.id === activePageId ? ' active' : '');
+        a.setAttribute('data-page', item.id);
+        a.innerHTML = '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:' + item.color + ';margin-right:4px;"></span> ' + item.icon + ' ' + item.label;
+        a.addEventListener('click', handleNavClick);
+        container.appendChild(a);
+      });
+      // Admin tab
+      const adminLink = document.createElement('a');
+      adminLink.href = '#';
+      adminLink.className = 'nav-link' + (activePageId === 'admin' ? ' active' : '');
+      adminLink.id = 'admin-tab';
+      adminLink.setAttribute('data-page', 'admin');
+      adminLink.innerHTML = '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#8b5cf6;margin-right:4px;"></span> ⚙️ Admin';
+      adminLink.style.display = isAdmin ? 'block' : 'none';
+      adminLink.addEventListener('click', handleNavClick);
+      container.appendChild(adminLink);
+    }
+
+    function handleNavClick(e) {
+      e.preventDefault();
+      const pageName = this.getAttribute('data-page');
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      this.classList.add('active');
+      const pageEl = document.getElementById('page-' + pageName);
+      if (pageEl) pageEl.classList.add('active');
+      // Update sidebar nav too
+      if (document.getElementById('sidebar-nav-items')) renderSidebarNav();
+    }
+
+    renderNavLinks();
+
+    // Nav config panel
+    let tempConfig = [];
+    let configDraggedIdx = null;
+
+    function openNavConfig() {
+      tempConfig = JSON.parse(JSON.stringify(navConfig));
+      renderConfigItems();
+      document.getElementById('nav-config-overlay').style.display = 'block';
+      document.getElementById('nav-config-panel').style.display = 'block';
+    }
+
+    function closeNavConfig() {
+      document.getElementById('nav-config-overlay').style.display = 'none';
+      document.getElementById('nav-config-panel').style.display = 'none';
+    }
+
+    function renderConfigItems() {
+      const container = document.getElementById('nav-config-items');
+      container.innerHTML = '';
+      tempConfig.forEach((item, idx) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:grid;grid-template-columns:2rem 1fr 2.5rem 2rem 2.5rem;gap:0.75rem;align-items:center;padding:0.75rem;margin-bottom:0.5rem;border:1px solid #e5e7eb;border-radius:8px;opacity:' + (item.visible ? '1' : '0.5') + ';cursor:grab;transition:all 0.2s;';
+        row.draggable = true;
+        row.setAttribute('data-config-idx', idx);
+        row.addEventListener('dragstart', function(e) { configDraggedIdx = idx; this.style.opacity = '0.3'; });
+        row.addEventListener('dragend', function() { configDraggedIdx = null; renderConfigItems(); });
+        row.addEventListener('dragover', function(e) { e.preventDefault(); });
+        row.addEventListener('drop', function(e) {
+          e.preventDefault();
+          if (configDraggedIdx !== null && configDraggedIdx !== idx) {
+            const dragged = tempConfig.splice(configDraggedIdx, 1)[0];
+            tempConfig.splice(idx, 0, dragged);
+            renderConfigItems();
+          }
+        });
+
+        // Drag handle
+        const handle = document.createElement('div');
+        handle.style.cssText = 'text-align:center;color:#9ca3af;font-size:0.85rem;';
+        handle.textContent = '⋮⋮';
+        row.appendChild(handle);
+
+        // Label (double-click to edit)
+        const labelDiv = document.createElement('div');
+        const labelSpan = document.createElement('span');
+        labelSpan.textContent = item.label;
+        labelSpan.style.cssText = 'cursor:pointer;padding:0.25rem 0.4rem;border-radius:4px;display:block;font-size:0.9rem;';
+        labelSpan.addEventListener('dblclick', function() {
+          const input = document.createElement('input');
+          input.type = 'text'; input.value = item.label;
+          input.style.cssText = 'width:100%;padding:0.25rem 0.4rem;border:1px solid #2563eb;border-radius:4px;font-size:0.9rem;';
+          input.addEventListener('blur', function() { tempConfig[idx].label = this.value; renderConfigItems(); });
+          input.addEventListener('keydown', function(e) { if (e.key === 'Enter') { tempConfig[idx].label = this.value; renderConfigItems(); } });
+          labelDiv.innerHTML = '';
+          labelDiv.appendChild(input);
+          input.focus();
+        });
+        labelDiv.appendChild(labelSpan);
+        row.appendChild(labelDiv);
+
+        // Icon picker
+        const iconDiv = document.createElement('div');
+        iconDiv.style.cssText = 'position:relative;text-align:center;';
+        const iconBtn = document.createElement('button');
+        iconBtn.style.cssText = 'background:#f3f4f6;border:none;border-radius:4px;padding:0.25rem 0.4rem;cursor:pointer;font-size:1.1rem;';
+        iconBtn.textContent = item.icon;
+        iconBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          document.querySelectorAll('.icon-picker-popup').forEach(p => p.remove());
+          const popup = document.createElement('div');
+          popup.className = 'icon-picker-popup';
+          popup.style.cssText = 'position:absolute;top:100%;left:50%;transform:translateX(-50%);background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:0.5rem;display:grid;grid-template-columns:repeat(6,1fr);gap:0.25rem;z-index:1001;box-shadow:0 8px 24px rgba(0,0,0,0.12);';
+          ICON_OPTIONS.forEach(ic => {
+            const opt = document.createElement('button');
+            opt.style.cssText = 'background:' + (ic === item.icon ? '#dbeafe' : '#f3f4f6') + ';border:none;border-radius:4px;padding:0.35rem;cursor:pointer;font-size:1rem;';
+            opt.textContent = ic;
+            opt.addEventListener('click', function() { tempConfig[idx].icon = ic; popup.remove(); renderConfigItems(); });
+            popup.appendChild(opt);
+          });
+          iconDiv.appendChild(popup);
+          setTimeout(() => document.addEventListener('click', function remover() { popup.remove(); document.removeEventListener('click', remover); }), 10);
+        });
+        iconDiv.appendChild(iconBtn);
+        row.appendChild(iconDiv);
+
+        // Color picker
+        const colorDiv = document.createElement('div');
+        colorDiv.style.cssText = 'position:relative;text-align:center;';
+        const colorBtn = document.createElement('button');
+        colorBtn.style.cssText = 'background:' + item.color + ';border:1px solid #d1d5db;border-radius:4px;width:1.5rem;height:1.5rem;cursor:pointer;';
+        colorBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          document.querySelectorAll('.color-picker-popup').forEach(p => p.remove());
+          const popup = document.createElement('div');
+          popup.className = 'color-picker-popup';
+          popup.style.cssText = 'position:absolute;top:100%;right:0;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:0.5rem;display:grid;grid-template-columns:repeat(4,1fr);gap:0.25rem;z-index:1001;box-shadow:0 8px 24px rgba(0,0,0,0.12);';
+          COLOR_OPTIONS.forEach(c => {
+            const opt = document.createElement('button');
+            opt.style.cssText = 'background:' + c + ';border:' + (c === item.color ? '2px solid #000' : '1px solid #d1d5db') + ';border-radius:4px;width:1.5rem;height:1.5rem;cursor:pointer;';
+            opt.addEventListener('click', function() { tempConfig[idx].color = c; popup.remove(); renderConfigItems(); });
+            popup.appendChild(opt);
+          });
+          colorDiv.appendChild(popup);
+          setTimeout(() => document.addEventListener('click', function remover() { popup.remove(); document.removeEventListener('click', remover); }), 10);
+        });
+        colorDiv.appendChild(colorBtn);
+        row.appendChild(colorDiv);
+
+        // Visibility toggle
+        const visDiv = document.createElement('div');
+        visDiv.style.cssText = 'text-align:center;';
+        const visBtn = document.createElement('button');
+        visBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:1rem;color:' + (item.visible ? '#2563eb' : '#9ca3af') + ';';
+        visBtn.textContent = item.visible ? '👁️' : '🚫';
+        visBtn.addEventListener('click', function() { tempConfig[idx].visible = !tempConfig[idx].visible; renderConfigItems(); });
+        visDiv.appendChild(visBtn);
+        row.appendChild(visDiv);
+
+        container.appendChild(row);
+      });
+    }
+
+    document.getElementById('nav-settings-btn').addEventListener('click', openNavConfig);
+    document.getElementById('nav-config-close').addEventListener('click', closeNavConfig);
+    document.getElementById('nav-config-overlay').addEventListener('click', closeNavConfig);
+    document.getElementById('nav-config-save').addEventListener('click', function() {
+      navConfig = JSON.parse(JSON.stringify(tempConfig));
+      localStorage.setItem('preview-nav-config', JSON.stringify(navConfig));
+      renderNavLinks();
+      if (document.getElementById('sidebar-nav-items')) renderSidebarNav();
+      closeNavConfig();
+    });
+    document.getElementById('nav-config-reset').addEventListener('click', function() {
+      tempConfig = JSON.parse(JSON.stringify(DEFAULT_NAV_CONFIG));
+      renderConfigItems();
+    });
+
+    // ===== LOGIN & AUTH =====
+    document.getElementById('google-signin-button').addEventListener('click', function() {
+      document.getElementById('login-page').style.display = 'none';
+      document.getElementById('app-container').style.display = 'block';
+    });
+
+    const loginTabBtns = document.querySelectorAll('.login-tab-btn');
+    loginTabBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        loginTabBtns.forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.login-tab-content').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        const tabName = this.getAttribute('data-tab');
+        document.getElementById('tab-' + tabName).classList.add('active');
+      });
+    });
+
+    document.getElementById('send-otp-btn').addEventListener('click', function() {
+      const phoneNum = document.getElementById('phone-number').value;
+      if (phoneNum.trim().length === 10) {
+        document.getElementById('otp-section').style.display = 'block';
+        this.disabled = true;
+        this.textContent = 'OTP Sent ✓';
+      } else {
+        alert('Please enter a valid 10-digit phone number');
+      }
+    });
+
+    const otpInputs = document.querySelectorAll('.otp-input');
+    otpInputs.forEach((input, index) => {
+      input.addEventListener('keyup', function(e) {
+        if (this.value.length === 1 && index < otpInputs.length - 1) otpInputs[index + 1].focus();
+        if (e.key === 'Backspace' && this.value.length === 0 && index > 0) otpInputs[index - 1].focus();
+      });
+    });
+
+    document.getElementById('verify-otp-btn').addEventListener('click', function() {
+      let otp = '';
+      otpInputs.forEach(input => otp += input.value);
+      if (otp.length === 6) {
+        document.getElementById('login-page').style.display = 'none';
+        document.getElementById('app-container').style.display = 'block';
+      } else {
+        alert('Please enter all 6 digits of OTP');
+      }
+    });
+
+    // ===== TAB SWITCHING =====
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const tabName = this.getAttribute('data-tab');
+        // Only affect sibling tabs within same container
+        const parent = this.closest('.tabs');
+        if (parent) {
+          parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        }
+        this.classList.add('active');
+        // Find matching tab content
+        const allTabContents = this.closest('.page') ? this.closest('.page').querySelectorAll('.tab-content') : document.querySelectorAll('.tab-content');
+        allTabContents.forEach(c => c.style.display = 'none');
+        const target = document.getElementById('tab-' + tabName);
+        if (target) target.style.display = 'block';
+      });
+    });
+
+    // ===== LAYOUT PRESETS & DRAGGABLE CARDS =====
+    let currentLayout = 'default';
+    const layoutBtns = document.querySelectorAll('.layout-btn');
+    layoutBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        layoutBtns.forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        currentLayout = this.getAttribute('data-layout');
+        const cardsContainer = document.getElementById('dashboard-cards');
+        cardsContainer.classList.remove('layout-compact', 'layout-sidebar');
+        if (currentLayout !== 'default') cardsContainer.classList.add('layout-' + currentLayout);
+      });
+    });
+
+    // Drag and drop for cards
+    const cards = document.querySelectorAll('.card');
+    let draggedElement = null;
+    cards.forEach(card => {
+      card.addEventListener('dragstart', function() { draggedElement = this; this.classList.add('dragging'); });
+      card.addEventListener('dragend', function() { this.classList.remove('dragging'); draggedElement = null; });
+      card.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        if (draggedElement && draggedElement !== this) {
+          const arr = Array.from(document.querySelectorAll('.card'));
+          if (arr.indexOf(draggedElement) < arr.indexOf(this)) this.parentNode.insertBefore(draggedElement, this.nextSibling);
+          else this.parentNode.insertBefore(draggedElement, this);
+        }
+      });
+    });
+
+    // ===== USER PROFILE DROPDOWN =====
+    const userTrigger = document.getElementById('user-trigger');
+    const userDropdown = document.getElementById('user-dropdown');
+    userTrigger.addEventListener('click', function(e) { e.stopPropagation(); userDropdown.classList.toggle('active'); });
+    document.addEventListener('click', function(e) {
+      if (!userDropdown.contains(e.target) && e.target !== userTrigger) userDropdown.classList.remove('active');
+    });
+    document.getElementById('logout-btn').addEventListener('click', function() {
+      document.getElementById('app-container').style.display = 'none';
+      document.getElementById('login-page').style.display = 'block';
+    });
+
+    // ===== ADMIN TOGGLE =====
+    const adminRoleBtns = document.querySelectorAll('.admin-role-btn');
+    const dropdownRole = document.getElementById('dropdown-user-role');
+    adminRoleBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        adminRoleBtns.forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        isAdmin = this.getAttribute('data-role') === 'admin';
+        const adminTab = document.getElementById('admin-tab');
+        if (isAdmin) {
+          if (adminTab) adminTab.style.display = 'block';
+          dropdownRole.textContent = 'ADMIN';
+          dropdownRole.style.background = '#fef2f2';
+          dropdownRole.style.color = '#dc2626';
+        } else {
+          if (adminTab) adminTab.style.display = 'none';
+          dropdownRole.textContent = 'USER';
+          dropdownRole.style.background = '#f3f4f6';
+          dropdownRole.style.color = '#6b7280';
+        }
+        renderNavLinks();
+        if (document.getElementById('sidebar-nav-items')) renderSidebarNav();
+      });
+    });
+
+    // ===== THEME & LAYOUT SWITCHING =====
+    let currentNavLayout = 'top';
+    let sidebarCollapsed = false;
+
+    document.querySelectorAll('.pref-theme-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const theme = this.getAttribute('data-theme-val');
+        document.querySelectorAll('.pref-theme-btn').forEach(b => b.style.borderColor = 'transparent');
+        this.style.borderColor = 'var(--accent-color)';
+        if (theme === 'light') document.documentElement.removeAttribute('data-theme');
+        else document.documentElement.setAttribute('data-theme', theme);
+      });
+    });
+
+    document.querySelectorAll('.pref-layout-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const layout = this.getAttribute('data-layout-val');
+        if (layout === currentNavLayout) return;
+        document.querySelectorAll('.pref-layout-btn').forEach(b => b.style.borderColor = 'transparent');
+        this.style.borderColor = 'var(--accent-color)';
+        currentNavLayout = layout;
+        switchLayout(layout);
+      });
+    });
+
+    function switchLayout(layout) {
+      const appContainer = document.getElementById('app-container');
+      const topbar = appContainer.querySelector('.topbar');
+
+      if (layout === 'sidebar') {
+        if (topbar) topbar.style.display = 'none';
+        let sidebarEl = document.getElementById('sidebar-el');
+        if (!sidebarEl) {
+          sidebarEl = document.createElement('div');
+          sidebarEl.id = 'sidebar-el';
+          sidebarEl.className = 'sidebar-preview';
+          sidebarEl.innerHTML = '<div class="sidebar-preview-header"><div class="sidebar-preview-brand"><span>💰</span> <span class="sidebar-preview-brand-text">Expense Tracker</span></div><button class="sidebar-preview-collapse" id="sidebar-collapse-btn">←</button></div><div class="sidebar-preview-nav" id="sidebar-nav-items"></div><div class="sidebar-preview-footer" id="sidebar-footer-el"></div>';
+          appContainer.insertBefore(sidebarEl, appContainer.firstChild);
+
+          document.getElementById('sidebar-collapse-btn').addEventListener('click', function() {
+            sidebarCollapsed = !sidebarCollapsed;
+            sidebarEl.classList.toggle('collapsed', sidebarCollapsed);
+            this.textContent = sidebarCollapsed ? '→' : '←';
+          });
+
+          // Build footer
+          const footer = document.getElementById('sidebar-footer-el');
+          const gearBtn = document.createElement('button');
+          gearBtn.style.cssText = 'background:none;border:1px solid var(--border-color);border-radius:6px;cursor:pointer;padding:0.5rem 0.75rem;color:var(--text-secondary);font-size:0.85rem;width:100%;text-align:left;display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;transition:all 0.15s;';
+          gearBtn.innerHTML = '🔧 <span class="sidebar-footer-label">Customize Nav</span>';
+          gearBtn.addEventListener('click', openNavConfig);
+          gearBtn.addEventListener('mouseenter', function() { this.style.background = 'var(--border-color)'; });
+          gearBtn.addEventListener('mouseleave', function() { this.style.background = 'none'; });
+          footer.appendChild(gearBtn);
+
+          const userSection = document.createElement('div');
+          userSection.style.cssText = 'position:relative;';
+          const userBtn = document.createElement('div');
+          userBtn.style.cssText = 'display:flex;align-items:center;gap:0.6rem;cursor:pointer;padding:0.5rem 0.75rem;border-radius:6px;transition:all 0.15s;';
+          userBtn.innerHTML = '<img src="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Ccircle cx=\'50\' cy=\'50\' r=\'50\' fill=\'%23667eea\'/%3E%3C/svg%3E" style="width:28px;height:28px;border-radius:50%;border:2px solid var(--border-color);" /><span class="sidebar-footer-label" style="font-size:0.85rem;font-weight:500;color:var(--text-primary);">Vijay Kumar</span>';
+          userBtn.addEventListener('mouseenter', function() { this.style.background = 'var(--border-color)'; });
+          userBtn.addEventListener('mouseleave', function() { this.style.background = 'none'; });
+
+          const origDropdown = document.getElementById('user-dropdown');
+          if (origDropdown) {
+            const dropdownClone = origDropdown.cloneNode(true);
+            dropdownClone.id = 'sidebar-user-dropdown';
+            dropdownClone.className = '';
+            dropdownClone.style.cssText = 'position:absolute;bottom:100%;left:0;margin-bottom:0.5rem;display:none;background:var(--bg-secondary);border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.2);min-width:280px;z-index:1000;';
+
+            userBtn.addEventListener('click', function(e) {
+              e.stopPropagation();
+              dropdownClone.style.display = dropdownClone.style.display === 'block' ? 'none' : 'block';
+            });
+            document.addEventListener('click', function(e) {
+              if (!userSection.contains(e.target)) dropdownClone.style.display = 'none';
+            });
+
+            dropdownClone.querySelectorAll('.pref-theme-btn').forEach(btn => {
+              btn.addEventListener('click', function() {
+                const theme = this.getAttribute('data-theme-val');
+                document.querySelectorAll('.pref-theme-btn').forEach(b => b.style.borderColor = 'transparent');
+                document.querySelectorAll('.pref-theme-btn[data-theme-val="'+theme+'"]').forEach(b => b.style.borderColor = 'var(--accent-color)');
+                if (theme === 'light') document.documentElement.removeAttribute('data-theme');
+                else document.documentElement.setAttribute('data-theme', theme);
+              });
+            });
+            dropdownClone.querySelectorAll('.pref-layout-btn').forEach(btn => {
+              btn.addEventListener('click', function() {
+                const newLayout = this.getAttribute('data-layout-val');
+                if (newLayout === currentNavLayout) return;
+                document.querySelectorAll('.pref-layout-btn').forEach(b => b.style.borderColor = 'transparent');
+                document.querySelectorAll('.pref-layout-btn[data-layout-val="'+newLayout+'"]').forEach(b => b.style.borderColor = 'var(--accent-color)');
+                currentNavLayout = newLayout;
+                dropdownClone.style.display = 'none';
+                switchLayout(newLayout);
+              });
+            });
+            const logoutClone = dropdownClone.querySelector('.user-dropdown-logout');
+            if (logoutClone) {
+              logoutClone.addEventListener('click', function() {
+                document.getElementById('app-container').style.display = 'none';
+                document.getElementById('login-page').style.display = 'block';
+              });
+            }
+            userSection.appendChild(userBtn);
+            userSection.appendChild(dropdownClone);
+          }
+          footer.appendChild(userSection);
+        }
+
+        sidebarEl.style.display = 'flex';
+        appContainer.style.display = 'flex';
+        appContainer.style.flexDirection = 'row';
+        appContainer.style.minHeight = '100vh';
+        renderSidebarNav();
+        const appDiv = appContainer.querySelector('.app');
+        if (appDiv) { appDiv.style.flex = '1'; appDiv.style.minWidth = '0'; }
+
+      } else {
+        if (topbar) topbar.style.display = '';
+        const sidebarEl = document.getElementById('sidebar-el');
+        if (sidebarEl) sidebarEl.style.display = 'none';
+        appContainer.style.display = '';
+        appContainer.style.flexDirection = '';
+        appContainer.style.minHeight = '';
+        const appDiv = appContainer.querySelector('.app');
+        if (appDiv) { appDiv.style.flex = ''; appDiv.style.minWidth = ''; }
+      }
+    }
+
+    function renderSidebarNav() {
+      const container = document.getElementById('sidebar-nav-items');
+      if (!container) return;
+      container.innerHTML = '';
+      const activePage = document.querySelector('.page.active');
+      const activeId = activePage ? activePage.id.replace('page-', '') : 'dashboard';
+      navConfig.filter(n => n.visible).forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'sidebar-preview-item' + (item.id === activeId ? ' active' : '');
+        div.innerHTML = '<span class="sidebar-preview-icon">' + item.icon + '</span><span class="sidebar-preview-label">' + item.label + '</span>';
+        div.addEventListener('click', function() {
+          container.querySelectorAll('.sidebar-preview-item').forEach(i => i.classList.remove('active'));
+          this.classList.add('active');
+          document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+          const pageEl = document.getElementById('page-' + item.id);
+          if (pageEl) pageEl.classList.add('active');
+        });
+        container.appendChild(div);
+      });
+      if (isAdmin) {
+        const adminDiv = document.createElement('div');
+        adminDiv.className = 'sidebar-preview-item' + (activeId === 'admin' ? ' active' : '');
+        adminDiv.innerHTML = '<span class="sidebar-preview-icon">⚙️</span><span class="sidebar-preview-label">Admin</span>';
+        adminDiv.addEventListener('click', function() {
+          container.querySelectorAll('.sidebar-preview-item').forEach(i => i.classList.remove('active'));
+          this.classList.add('active');
+          document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+          document.getElementById('page-admin').classList.add('active');
+        });
+        container.appendChild(adminDiv);
+      }
+    }
+
+    // ===== MONTH NAVIGATION =====
+    let currentMonth = new Date(2026, 1, 1);
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+    function updateMonthDisplay() {
+      const el = document.getElementById('current-month');
+      if (el) el.textContent = monthNames[currentMonth.getMonth()] + ' ' + currentMonth.getFullYear();
+    }
+
+    document.querySelector('.prev-month').addEventListener('click', function() {
+      currentMonth.setMonth(currentMonth.getMonth() - 1);
+      updateMonthDisplay();
+    });
+
+    document.querySelector('.next-month').addEventListener('click', function() {
+      currentMonth.setMonth(currentMonth.getMonth() + 1);
+      updateMonthDisplay();
+    });
+  </script>
+</body>
+</html>

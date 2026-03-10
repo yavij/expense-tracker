@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn clean compile)",
+      "Bash(mvn clean package -q)",
+      "Bash(ls -la /Users/vijay-14806/expense-tracker/backend/target/*.jar)",
+      "Bash(/opt/homebrew/bin/node --version)",
+      "Bash(/opt/homebrew/bin/npm --version)",
+      "Bash(PATH=\"/opt/homebrew/bin:$PATH\" node --version)",
+      "Bash(PATH=\"/opt/homebrew/bin:$PATH\" npm --version)"
+    ]
+  }
+}

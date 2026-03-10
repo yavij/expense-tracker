@@ -1,0 +1,55 @@
+version: '3.9'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: expense-tracker-app
+    ports:
+      - "7000:7000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      JDBC_URL: jdbc:mysql://mysql:3306/expensetracker?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      DB_USER: expensetracker
+      DB_PASSWORD: expensetracker_password
+      PORT: 7000
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+    networks:
+      - expense-tracker-network
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+
+  mysql:
+    image: mysql:8.0
+    container_name: expense-tracker-db
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: expensetracker
+      MYSQL_PASSWORD: expensetracker_password
+      MYSQL_DATABASE: expensetracker
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - expense-tracker-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  expense-tracker-network:
+    driver: bridge
