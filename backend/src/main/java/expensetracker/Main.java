@@ -111,7 +111,7 @@ public class Main {
 
         // Auth middleware – throw UnauthorizedResponse to halt the request chain
         app.before("/api/*", ctx -> {
-            if (ctx.path().equals("/api/auth/google") || ctx.path().equals("/api/auth/phone")) return;
+            if (ctx.path().equals("/api/auth/google") || ctx.path().equals("/api/auth/phone") || ctx.path().equals("/api/docs")) return;
             String auth = ctx.header("Authorization");
             if (auth == null || !auth.startsWith("Bearer ")) {
                 throw new UnauthorizedResponse("Missing or invalid Authorization");
