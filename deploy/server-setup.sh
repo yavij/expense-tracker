@@ -5,7 +5,7 @@ set -euo pipefail
 # Kanaku Book - Server Initial Setup
 # ============================================
 # Run this ONCE on a fresh Ubuntu 22.04/24.04 server:
-#   curl -sSL https://raw.githubusercontent.com/YOUR_REPO/main/deploy/server-setup.sh | bash
+#   curl -sSL https://raw.githubusercontent.com/yavij/expense-tracker/main/deploy/server-setup.sh | bash
 #   OR: scp this file to server and run: bash server-setup.sh
 # ============================================
 
@@ -72,7 +72,7 @@ echo " Server setup complete!"
 echo "============================================"
 echo ""
 echo " Next steps:"
-echo "   1. Clone your repo:  cd /opt/kanakubook && git clone YOUR_REPO ."
+echo "   1. Clone your repo:  cd /opt/kanakubook && git clone https://github.com/yavij/expense-tracker.git ."
 echo "   2. Configure:        cp .env.production .env && nano .env"
 echo "   3. Deploy:           bash deploy/deploy.sh"
 echo ""
