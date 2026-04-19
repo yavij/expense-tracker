@@ -73,3 +73,9 @@ logs/
 # IDE runtime data
 .history/
 .vscode-server/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
