@@ -9,13 +9,15 @@ set -euo pipefail
 #   OR: scp this file to server and run: bash server-setup.sh
 # ============================================
 
+export DEBIAN_FRONTEND=noninteractive
+
 echo "============================================"
 echo " Kanaku Book - Server Setup"
 echo "============================================"
 
 # Update system
 echo "[1/6] Updating system packages..."
-apt-get update -qq && apt-get upgrade -y -qq
+apt-get update -qq && apt-get -y -qq -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade
 
 # Install Docker
 echo "[2/6] Installing Docker..."
