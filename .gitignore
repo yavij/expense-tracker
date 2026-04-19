@@ -44,10 +44,12 @@ yarn.lock
 *.swo
 *~
 
-# Environment files
+# Environment files (NEVER commit real credentials)
 .env
 .env.local
 .env.*.local
+backend/.env
+frontend/.env
 
 # Database files
 *.mv.db
@@ -60,12 +62,9 @@ h2.trace.db
 Thumbs.db
 .directory
 
-# Build artifacts
-dist/
-build/
-
-# Docker
-.dockerignore
+# Logs
+logs/
+*.log
 
 # IDE runtime data
 .history/

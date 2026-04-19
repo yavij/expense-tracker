@@ -79,6 +79,11 @@ export async function getExpenses(params = {}) {
   return api('/api/expenses' + (q ? '?' + q : ''));
 }
 
+export async function getExpensesPaginated(params = {}) {
+  const q = new URLSearchParams(params).toString();
+  return api('/api/expenses' + (q ? '?' + q : ''));
+}
+
 export async function getExpense(id) {
   return api('/api/expenses/' + encodeURIComponent(id));
 }
@@ -259,4 +264,9 @@ export async function verifyPayment(data) {
 }
 export async function getSubscriptionStatus() {
   return api('/api/payment/status');
+}
+
+// ── Market Rates (Gold & Silver) ───────────────────────
+export async function getMarketRates() {
+  return api('/api/market-rates');
 }

@@ -13,6 +13,7 @@ const DEFAULT_NAV = [
   { id: 'analytics', label: 'Analytics', path: '/app/analytics', icon: '📉', color: '#0891b2', visible: true },
   { id: 'recurring', label: 'Recurring', path: '/app/recurring', icon: '🔄', color: '#6366f1', visible: true },
   { id: 'budgets', label: 'Budgets', path: '/app/budgets', icon: '🎯', color: '#ec4899', visible: true },
+  { id: 'market-rates', label: 'Market Rates', path: '/app/market-rates', icon: '🥇', color: '#f59e0b', visible: true },
 ]
 
 
@@ -376,7 +377,7 @@ export default function Layout() {
           <NavLink to="/app/dashboard" className="topbar-brand" title="Kanaku Book">
             <span className="topbar-brand-icon">₹</span>
           </NavLink>
-          {navConfig.map(item => (
+          {visibleNavItems.map(item => (
             <NavLink key={item.id} to={item.path} className="topbar-nav-item">
               {item.label}
             </NavLink>

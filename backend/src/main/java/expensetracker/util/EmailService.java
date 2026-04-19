@@ -4,10 +4,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
+import java.util.Properties;
+import jakarta.mail.*;
+import jakarta.mail.internet.*;
 
 /**
  * Email notification service for Expense Tracker.
- * Currently logs emails to console/logs. Can be extended with actual SMTP integration.
+ * When EMAIL_ENABLED=true and SMTP credentials are provided, sends real emails via SMTP.
+ * Otherwise, logs email content for development/debugging.
  */
 public class EmailService {
     private static final Logger log = LoggerFactory.getLogger(EmailService.class);
@@ -17,6 +21,8 @@ public class EmailService {
     private final int smtpPort;
     private final String smtpUser;
     private final String smtpPassword;
+    private final String fromAddress;
+    private Session mailSession;
 
     public EmailService() {
         this.enabled = Boolean.parseBoolean(System.getenv().getOrDefault("EMAIL_ENABLED", "false"));
@@ -24,12 +30,34 @@ public class EmailService {
         this.smtpPort = Integer.parseInt(System.getenv().getOrDefault("SMTP_PORT", "587"));
         this.smtpUser = System.getenv().getOrDefault("SMTP_USER", "");
         this.smtpPassword = System.getenv().getOrDefault("SMTP_PASSWORD", "");
+        this.fromAddress = System.getenv().getOrDefault("SMTP_FROM", smtpUser);
 
-        if (enabled) {
+        if (enabled && !smtpUser.isEmpty() && !smtpPassword.isEmpty()) {
+            initMailSession();
             log.info("Email service initialized with SMTP: {}:{}", smtpHost, smtpPort);
+        } else if (enabled) {
+            log.warn("Email service enabled but SMTP_USER or SMTP_PASSWORD not set. Emails will be logged only.");
         } else {
-            log.info("Email service disabled. Emails will be logged only.");
+            log.info("Email service disabled. Set EMAIL_ENABLED=true to activate.");
         }
+    }
+
+    private void initMailSession() {
+        Properties props = new Properties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.host", smtpHost);
+        props.put("mail.smtp.port", String.valueOf(smtpPort));
+        props.put("mail.smtp.connectiontimeout", "10000");
+        props.put("mail.smtp.timeout", "10000");
+        props.put("mail.smtp.writetimeout", "10000");
+
+        mailSession = Session.getInstance(props, new Authenticator() {
+            @Override
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(smtpUser, smtpPassword);
+            }
+        });
     }
 
     /**
@@ -85,18 +113,33 @@ public class EmailService {
      * @param subject email subject
      * @param body    email body
      */
-    private void sendEmail(String email, String subject, String body) {
+    private void sendEmail(String toEmail, String subject, String body) {
         if (!enabled) {
-            log.info("Email (disabled) would be sent to: {}", email);
+            log.info("Email (disabled) would be sent to: {}", toEmail);
             log.debug("Subject: {}", subject);
             log.debug("Body:\n{}", body);
             return;
         }
 
-        // TODO: Implement actual SMTP integration
-        log.info("Sending email to: {}", email);
-        log.info("Subject: {}", subject);
-        log.debug("Body:\n{}", body);
+        if (mailSession == null) {
+            log.warn("Mail session not initialized. Logging email instead. To: {}, Subject: {}", toEmail, subject);
+            log.debug("Body:\n{}", body);
+            return;
+        }
+
+        try {
+            Message message = new MimeMessage(mailSession);
+            message.setFrom(new InternetAddress(fromAddress, "Expense Tracker"));
+            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail));
+            message.setSubject(subject);
+            message.setText(body);
+            message.setSentDate(new java.util.Date());
+
+            Transport.send(message);
+            log.info("Email sent successfully to: {} | Subject: {}", toEmail, subject);
+        } catch (Exception e) {
+            log.error("Failed to send email to: {} | Subject: {} | Error: {}", toEmail, subject, e.getMessage());
+        }
     }
 
     /**

@@ -1,0 +1,46 @@
+# Git
+.git
+.gitignore
+
+# Node
+node_modules
+frontend/node_modules
+npm-debug.log*
+
+# Maven build output
+backend/target
+
+# IDE
+.idea
+.vscode
+*.iml
+*.swp
+*.swo
+
+# Environment files (secrets)
+.env
+.env.local
+.env.*.local
+frontend/.env
+backend/.env
+
+# Database files
+*.mv.db
+*.trace.db
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Documentation (not needed in image)
+API.md
+CONVERSATION_LOG.md
+README.md
+
+# Docker (avoid recursive copy)
+docker-compose.yml
+Dockerfile

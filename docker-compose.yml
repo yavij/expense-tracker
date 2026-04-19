@@ -7,17 +7,26 @@ services:
       dockerfile: Dockerfile
     container_name: expense-tracker-app
     ports:
-      - "7000:7000"
+      - "${APP_PORT:-7000}:7000"
     depends_on:
       mysql:
         condition: service_healthy
     environment:
       JDBC_URL: jdbc:mysql://mysql:3306/expensetracker?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      DB_USER: expensetracker
-      DB_PASSWORD: expensetracker_password
+      DB_USER: ${DB_USER:-expensetracker}
+      DB_PASSWORD: ${DB_PASSWORD:-expensetracker_password}
       PORT: 7000
-      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production-min-32-chars}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-false}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-}
+      GOLD_API_KEY: ${GOLD_API_KEY:-}
+      METAL_PRICE_API_KEY: ${METAL_PRICE_API_KEY:-}
     networks:
       - expense-tracker-network
     restart: unless-stopped
@@ -28,11 +37,11 @@ services:
     image: mysql:8.0
     container_name: expense-tracker-db
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT:-3306}:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_USER: expensetracker
-      MYSQL_PASSWORD: expensetracker_password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password_change_me}
+      MYSQL_USER: ${DB_USER:-expensetracker}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-expensetracker_password}
       MYSQL_DATABASE: expensetracker
     volumes:
       - mysql_data:/var/lib/mysql

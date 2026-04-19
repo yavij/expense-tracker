@@ -7,7 +7,8 @@
       "Bash(/opt/homebrew/bin/node --version)",
       "Bash(/opt/homebrew/bin/npm --version)",
       "Bash(PATH=\"/opt/homebrew/bin:$PATH\" node --version)",
-      "Bash(PATH=\"/opt/homebrew/bin:$PATH\" npm --version)"
+      "Bash(PATH=\"/opt/homebrew/bin:$PATH\" npm --version)",
+      "Bash(mvn clean:*)"
     ]
   }
 }

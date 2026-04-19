@@ -182,6 +182,12 @@ export default function Analytics() {
                       </div>
                     </section>
                   )}
+                  {breakdown.length > 0 && (
+                    <section className="chart-section">
+                      <h2>Expense Distribution</h2>
+                      <DonutChart data={breakdown.map(c => ({ category: c.category, amount: c.amount }))} />
+                    </section>
+                  )}
                   {breakdown.length === 0 && <div className="no-data">No expense data for this month</div>}
                 </>
               );
@@ -260,6 +266,17 @@ export default function Analytics() {
                     <section className="chart-section">
                       <h2>Monthly Savings Trend</h2>
                       <MonthlyBarsChart data={savingsTrend} />
+                    </section>
+                  )}
+
+                  {savingsTrend.length > 0 && (
+                    <section className="chart-section">
+                      <h2>Cumulative Savings</h2>
+                      <CumulativeSavingsChart data={savingsTrend.reduce((acc, val) => {
+                        const prev = acc.length > 0 ? acc[acc.length - 1] : 0;
+                        acc.push(prev + val);
+                        return acc;
+                      }, [])} />
                     </section>
                   )}
                 </>

@@ -158,4 +158,55 @@ public class ValidationUtil {
 
         return upper;
     }
+
+    // ── Convenience boolean/sanitize helpers (used by tests and callers) ──
+
+    /**
+     * Sanitizes a string by stripping HTML tags, trimming, and truncating
+     * to a default max length of 500 characters. Returns "" for null input.
+     */
+    public static String sanitize(String input) {
+        return sanitize(input, 500);
+    }
+
+    /**
+     * Sanitizes a string by stripping HTML tags, trimming, and truncating
+     * to the given maxLength. Returns "" for null input.
+     */
+    public static String sanitize(String input, int maxLength) {
+        if (input == null) return "";
+        String cleaned = HTML_PATTERN.matcher(input).replaceAll("").trim();
+        if (cleaned.length() > maxLength) {
+            cleaned = cleaned.substring(0, maxLength);
+        }
+        return cleaned;
+    }
+
+    /**
+     * Returns true if the email has a valid format, false otherwise (including null).
+     */
+    public static boolean isValidEmail(String email) {
+        if (email == null || email.isBlank()) return false;
+        return EMAIL_PATTERN.matcher(email.trim()).matches();
+    }
+
+    /**
+     * Returns true if the amount is a positive number, false otherwise.
+     */
+    public static boolean isValidAmount(double amount) {
+        return amount > 0;
+    }
+
+    /**
+     * Returns true if the string is a valid yyyy-MM-dd date, false otherwise (including null).
+     */
+    public static boolean isValidDate(String dateStr) {
+        if (dateStr == null || dateStr.isBlank()) return false;
+        try {
+            java.time.LocalDate.parse(dateStr);
+            return true;
+        } catch (java.time.format.DateTimeParseException e) {
+            return false;
+        }
+    }
 }

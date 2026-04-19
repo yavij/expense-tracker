@@ -15,6 +15,7 @@ import Analytics from './pages/Analytics'
 import RecurringTransactions from './pages/RecurringTransactions'
 import BudgetManager from './pages/BudgetManager'
 import Admin from './pages/Admin'
+import MarketRates from './pages/MarketRates'
 import PaymentGate from './components/PaymentGate'
 
 function ProtectedRoute({ children }) {
@@ -57,6 +58,7 @@ export default function App() {
         <Route path="analytics" element={<PaymentGate feature="Analytics"><Analytics /></PaymentGate>} />
         <Route path="recurring" element={<PaymentGate feature="Recurring Transactions"><RecurringTransactions /></PaymentGate>} />
         <Route path="budgets" element={<PaymentGate feature="Budget Manager"><BudgetManager /></PaymentGate>} />
+        <Route path="market-rates" element={<MarketRates />} />
         <Route path="admin" element={
           <AdminRoute>
             <Admin />

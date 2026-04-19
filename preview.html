@@ -785,6 +785,52 @@
       width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border-color);
     }
     .sidebar-preview-topbar .user span { color: var(--text-primary); }
+
+    /* Market Rates */
+    .rates-status-bar {
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+      padding: 0.6rem 1rem; border-radius: 0.5rem; margin-bottom: 1.25rem;
+      background: var(--bg-tertiary, var(--bg-secondary)); border: 1px solid var(--border-color);
+      font-size: 0.78rem; color: var(--text-secondary);
+    }
+    .rates-section {
+      background: var(--bg-secondary); border-radius: 0.75rem; border: 1px solid var(--border-color);
+      margin-bottom: 1.25rem; overflow: hidden; box-shadow: var(--card-shadow);
+    }
+    .rates-section-header {
+      display: flex; align-items: center; gap: 0.6rem; padding: 0.9rem 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .rates-section-header h3 { margin: 0; font-size: 1rem; font-weight: 600; color: var(--text-primary); }
+    .rates-section-header.gold { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); }
+    .rates-section-header.silver { background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); }
+    .rates-icon { font-size: 1.3rem; }
+    .rates-subtitle { font-size: 0.75rem; color: var(--text-secondary); margin-left: auto; }
+    .rates-cards {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem; padding: 1.25rem;
+    }
+    .rate-card {
+      padding: 1rem 1.1rem; border-radius: 0.625rem; border: 1px solid var(--border-color);
+      background: var(--bg-secondary); text-align: center; transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .rate-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .rate-card-label { font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.03em; }
+    .rate-card-price { font-size: 1.4rem; font-weight: 700; color: var(--text-primary); }
+    .rate-card-unit { font-size: 0.72rem; color: var(--text-muted, var(--text-secondary)); margin-top: 0.15rem; }
+    .rate-card-secondary { font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border-color); }
+    .rate-card.gold-primary { border-left: 3px solid #f59e0b; }
+    .rate-card.gold-secondary { border-left: 3px solid #d97706; }
+    .rate-card.gold-tertiary { border-left: 3px solid #b45309; }
+    .rate-card.silver-primary { border-left: 3px solid #9ca3af; }
+    .rate-card.silver-secondary { border-left: 3px solid #6b7280; }
+    .rate-card.silver-tertiary { border-left: 3px solid #4b5563; }
+    .rates-info {
+      padding: 0.85rem 1.1rem; border-radius: 0.5rem; margin-bottom: 1.25rem;
+      background: var(--accent-light, #eff6ff); border: 1px solid var(--border-color);
+      font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5;
+    }
+    .rates-info strong { color: var(--text-primary); }
   </style>
 </head>
 <body>
@@ -1468,6 +1514,85 @@
           </div>
         </div>
 
+        <!-- MARKET RATES PAGE -->
+        <div id="page-market-rates" class="page">
+          <div class="page-header">
+            <h2>Market Rates</h2>
+            <div style="display:flex;align-items:center;gap:0.75rem">
+              <label style="font-size:0.82rem;color:var(--text-secondary);display:flex;align-items:center;gap:0.3rem">
+                <input type="checkbox" checked style="accent-color:var(--accent-color)"> Auto-refresh
+              </label>
+              <button class="btn btn-outline btn-sm">↻ Refresh</button>
+            </div>
+          </div>
+
+          <div class="rates-status-bar">
+            <span>🟢 Live rates</span>
+            <span>Source: GoldAPI.io</span>
+            <span>Updated: 10:30:45 AM</span>
+          </div>
+
+          <!-- Gold Section -->
+          <div class="rates-section">
+            <div class="rates-section-header gold">
+              <span class="rates-icon">🥇</span>
+              <h3>Gold Rates</h3>
+              <span class="rates-subtitle">Today's live gold price in India</span>
+            </div>
+            <div class="rates-cards">
+              <div class="rate-card gold-primary">
+                <div class="rate-card-label">Gold 24K (99.9%)</div>
+                <div class="rate-card-price">₹14,456.00</div>
+                <div class="rate-card-unit">per gram</div>
+                <div class="rate-card-secondary">₹1,44,560.00 / 10 gram</div>
+              </div>
+              <div class="rate-card gold-secondary">
+                <div class="rate-card-label">Gold 22K (91.6%)</div>
+                <div class="rate-card-price">₹13,250.00</div>
+                <div class="rate-card-unit">per gram</div>
+                <div class="rate-card-secondary">₹1,32,500.00 / 10 gram</div>
+              </div>
+              <div class="rate-card gold-tertiary">
+                <div class="rate-card-label">Gold 18K (75%)</div>
+                <div class="rate-card-price">₹11,050.00</div>
+                <div class="rate-card-unit">per gram</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Silver Section -->
+          <div class="rates-section">
+            <div class="rates-section-header silver">
+              <span class="rates-icon">🥈</span>
+              <h3>Silver Rates</h3>
+              <span class="rates-subtitle">Today's live silver price in India</span>
+            </div>
+            <div class="rates-cards">
+              <div class="rate-card silver-primary">
+                <div class="rate-card-label">Silver</div>
+                <div class="rate-card-price">₹235.00</div>
+                <div class="rate-card-unit">per gram</div>
+              </div>
+              <div class="rate-card silver-secondary">
+                <div class="rate-card-label">Silver</div>
+                <div class="rate-card-price">₹23,500.00</div>
+                <div class="rate-card-unit">per 100 gram</div>
+              </div>
+              <div class="rate-card silver-tertiary">
+                <div class="rate-card-label">Silver</div>
+                <div class="rate-card-price">₹2,35,000.00</div>
+                <div class="rate-card-unit">per kg</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rates-info">
+            <p><strong>Note:</strong> Rates shown are indicative and sourced from international spot markets.
+            Actual jewellery prices may include making charges, GST (3%), and hallmarking charges.
+            Rates refresh automatically every 5 minutes.</p>
+          </div>
+        </div>
+
         <!-- ADMIN PAGE -->
         <div id="page-admin" class="page">
           <div class="page-header">
@@ -1553,6 +1678,7 @@
       { id: 'analytics', label: 'Analytics', icon: '📉', color: '#0891b2', visible: true },
       { id: 'recurring', label: 'Recurring', icon: '🔄', color: '#6366f1', visible: true },
       { id: 'budgets', label: 'Budgets', icon: '🎯', color: '#ec4899', visible: true },
+      { id: 'market-rates', label: 'Market Rates', icon: '🥇', color: '#f59e0b', visible: true },
     ];
 
     let isAdmin = true;

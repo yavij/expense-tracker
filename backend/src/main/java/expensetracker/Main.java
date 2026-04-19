@@ -10,6 +10,7 @@ import expensetracker.handler.DebtHandler;
 import expensetracker.handler.ExpenseHandler;
 import expensetracker.handler.InvestmentHandler;
 import expensetracker.handler.ExportHandler;
+import expensetracker.handler.MarketRatesHandler;
 import expensetracker.handler.PaymentHandler;
 import expensetracker.handler.PreferenceHandler;
 import expensetracker.handler.RecurringHandler;
@@ -26,6 +27,7 @@ import io.javalin.http.UnauthorizedResponse;
 import io.jsonwebtoken.Claims;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.List;
 import java.util.Map;
 
 public class Main {
@@ -34,6 +36,11 @@ public class Main {
     public static void main(String[] args) {
         Database.init();
         log.info("Database initialization complete");
+
+        String jwtSecret = System.getenv("JWT_SECRET");
+        if (jwtSecret == null || jwtSecret.length() < 32) {
+            log.warn("JWT_SECRET is not set or is shorter than 32 characters. Using insecure default. Set a strong JWT_SECRET for production!");
+        }
 
         AuthHandler authHandler = new AuthHandler();
         ExpenseHandler expenseHandler = new ExpenseHandler();
@@ -48,6 +55,7 @@ public class Main {
         PreferenceHandler preferenceHandler = new PreferenceHandler();
         AdminHandler adminHandler = new AdminHandler();
         PaymentHandler paymentHandler = new PaymentHandler();
+        MarketRatesHandler marketRatesHandler = new MarketRatesHandler();
 
         // Rate limiters
         RateLimiter authRateLimiter = new RateLimiter(10, 60000); // 10 requests per minute for auth
@@ -209,8 +217,90 @@ public class Main {
         app.post("/api/payment/verify", paymentHandler::verifyPayment);
         app.get("/api/payment/status", paymentHandler::status);
 
+        // Market rates (gold & silver)
+        app.get("/api/market-rates", marketRatesHandler::getRates);
+
         app.get("/api/admin/users", adminHandler::users);
         app.get("/api/admin/logins", adminHandler::logins);
+
+        // Health check endpoint
+        app.get("/health", ctx -> ctx.json(Map.of("status", "ok", "timestamp", System.currentTimeMillis())));
+
+        // API documentation endpoint
+        app.get("/api/docs", ctx -> {
+            ctx.contentType("application/json");
+            ctx.json(Map.of(
+                "openapi", "3.0.3",
+                "info", Map.of(
+                    "title", "Kanaku Book API",
+                    "version", "1.0.0",
+                    "description", "Expense Tracker REST API"
+                ),
+                "paths", Map.ofEntries(
+                    Map.entry("/api/auth/google", Map.of("post", Map.of("summary", "Google OAuth login", "tags", List.of("Auth")))),
+                    Map.entry("/api/auth/phone", Map.of("post", Map.of("summary", "Phone OTP login", "tags", List.of("Auth")))),
+                    Map.entry("/api/me", Map.of(
+                        "get", Map.of("summary", "Get current user", "tags", List.of("Auth")),
+                        "put", Map.of("summary", "Update profile", "tags", List.of("Auth"))
+                    )),
+                    Map.entry("/api/expenses", Map.of(
+                        "get", Map.of("summary", "List expenses (supports limit/offset pagination)", "tags", List.of("Expenses")),
+                        "post", Map.of("summary", "Create expense", "tags", List.of("Expenses"))
+                    )),
+                    Map.entry("/api/expenses/{id}", Map.of(
+                        "get", Map.of("summary", "Get expense by ID", "tags", List.of("Expenses")),
+                        "put", Map.of("summary", "Update expense", "tags", List.of("Expenses")),
+                        "delete", Map.of("summary", "Delete expense", "tags", List.of("Expenses"))
+                    )),
+                    Map.entry("/api/expenses/summary", Map.of("get", Map.of("summary", "Monthly expense summary", "tags", List.of("Expenses")))),
+                    Map.entry("/api/expenses/search", Map.of("get", Map.of("summary", "Search expenses by text", "tags", List.of("Expenses")))),
+                    Map.entry("/api/investments", Map.of(
+                        "get", Map.of("summary", "List investments", "tags", List.of("Investments")),
+                        "post", Map.of("summary", "Create investment", "tags", List.of("Investments"))
+                    )),
+                    Map.entry("/api/investments/portfolio", Map.of("get", Map.of("summary", "Portfolio summary", "tags", List.of("Investments")))),
+                    Map.entry("/api/salary", Map.of(
+                        "get", Map.of("summary", "List salary entries", "tags", List.of("Salary")),
+                        "post", Map.of("summary", "Create salary entry", "tags", List.of("Salary"))
+                    )),
+                    Map.entry("/api/salary/history", Map.of("get", Map.of("summary", "Salary history with yearly totals", "tags", List.of("Salary")))),
+                    Map.entry("/api/debts", Map.of(
+                        "get", Map.of("summary", "List debts", "tags", List.of("Debts")),
+                        "post", Map.of("summary", "Create debt", "tags", List.of("Debts"))
+                    )),
+                    Map.entry("/api/debts/schedule", Map.of("get", Map.of("summary", "Debt payoff schedule (snowball/avalanche)", "tags", List.of("Debts")))),
+                    Map.entry("/api/budgets", Map.of(
+                        "get", Map.of("summary", "List budgets", "tags", List.of("Budgets")),
+                        "post", Map.of("summary", "Create/update budget", "tags", List.of("Budgets"))
+                    )),
+                    Map.entry("/api/budgets/status", Map.of("get", Map.of("summary", "Budget status with spend vs limit", "tags", List.of("Budgets")))),
+                    Map.entry("/api/recurring", Map.of(
+                        "get", Map.of("summary", "List recurring transactions", "tags", List.of("Recurring")),
+                        "post", Map.of("summary", "Create recurring transaction", "tags", List.of("Recurring"))
+                    )),
+                    Map.entry("/api/recurring/process", Map.of("post", Map.of("summary", "Process due recurring transactions", "tags", List.of("Recurring")))),
+                    Map.entry("/api/analytics/monthly", Map.of("get", Map.of("summary", "Monthly analytics breakdown", "tags", List.of("Analytics")))),
+                    Map.entry("/api/analytics/yearly", Map.of("get", Map.of("summary", "Yearly analytics trends", "tags", List.of("Analytics")))),
+                    Map.entry("/api/analytics/networth", Map.of("get", Map.of("summary", "Net worth calculation", "tags", List.of("Analytics")))),
+                    Map.entry("/api/export/expenses", Map.of("get", Map.of("summary", "Export expenses as CSV", "tags", List.of("Export")))),
+                    Map.entry("/api/export/investments", Map.of("get", Map.of("summary", "Export investments as CSV", "tags", List.of("Export")))),
+                    Map.entry("/api/export/salary", Map.of("get", Map.of("summary", "Export salary as CSV", "tags", List.of("Export")))),
+                    Map.entry("/api/export/debts", Map.of("get", Map.of("summary", "Export debts as CSV", "tags", List.of("Export")))),
+                    Map.entry("/api/backup", Map.of("get", Map.of("summary", "Full JSON backup", "tags", List.of("Backup")))),
+                    Map.entry("/api/backup/restore", Map.of("post", Map.of("summary", "Restore from JSON backup", "tags", List.of("Backup")))),
+                    Map.entry("/api/preferences", Map.of(
+                        "get", Map.of("summary", "Get user preferences", "tags", List.of("Preferences")),
+                        "put", Map.of("summary", "Update user preferences", "tags", List.of("Preferences"))
+                    )),
+                    Map.entry("/api/payment/create-order", Map.of("post", Map.of("summary", "Create Razorpay payment order", "tags", List.of("Payment")))),
+                    Map.entry("/api/payment/verify", Map.of("post", Map.of("summary", "Verify payment signature", "tags", List.of("Payment")))),
+                    Map.entry("/api/payment/status", Map.of("get", Map.of("summary", "Get subscription status", "tags", List.of("Payment")))),
+                    Map.entry("/api/market-rates", Map.of("get", Map.of("summary", "Live gold & silver market rates", "tags", List.of("Market Rates")))),
+                    Map.entry("/api/admin/users", Map.of("get", Map.of("summary", "List all users (admin)", "tags", List.of("Admin")))),
+                    Map.entry("/api/admin/logins", Map.of("get", Map.of("summary", "Login audit trail (admin)", "tags", List.of("Admin"))))
+                )
+            ));
+        });
 
         int port = Integer.parseInt(System.getenv().getOrDefault("PORT", "7000"));
         log.info("Starting Expense Tracker API on port {}", port);

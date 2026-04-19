@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { getExpenses, deleteExpense, exportCsv, searchExpenses } from '../api/client'
+import { getExpenses, getExpensesPaginated, deleteExpense, exportCsv, searchExpenses } from '../api/client'
 import { CATEGORIES, getCategoryLabel } from '../constants/categories'
+
+const PAGE_SIZE = 25
 
 export default function ExpenseList() {
   const [list, setList] = useState([])
@@ -11,29 +13,38 @@ export default function ExpenseList() {
   const [category, setCategory] = useState('')
   const [search, setSearch] = useState('')
   const [err, setErr] = useState('')
+  const [page, setPage] = useState(0)
+  const [totalCount, setTotalCount] = useState(0)
   const debounceTimer = useRef(null)
 
   function load() {
     setLoading(true)
     setErr('')
 
-    // If search query exists, use search endpoint
     if (search.trim()) {
       searchExpenses(search).then(data => {
-        setList(Array.isArray(data) ? data : [])
+        const arr = Array.isArray(data) ? data : []
+        setList(arr)
+        setTotalCount(arr.length)
         setLoading(false)
       }).catch(() => {
         setErr('Failed to search expenses')
         setLoading(false)
       })
     } else {
-      // Otherwise use filtered endpoint
-      const params = {}
+      const params = { limit: String(PAGE_SIZE), offset: String(page * PAGE_SIZE) }
       if (from) params.from = from
       if (to) params.to = to
       if (category) params.category = category
-      getExpenses(params).then(data => {
-        setList(Array.isArray(data) ? data : [])
+      getExpensesPaginated(params).then(data => {
+        if (data && data.data) {
+          setList(Array.isArray(data.data) ? data.data : [])
+          setTotalCount(data.total || 0)
+        } else {
+          const arr = Array.isArray(data) ? data : []
+          setList(arr)
+          setTotalCount(arr.length)
+        }
         setLoading(false)
       }).catch(() => {
         setErr('Failed to load expenses')
@@ -42,7 +53,7 @@ export default function ExpenseList() {
     }
   }
 
-  useEffect(() => { load() }, [from, to, category])
+  useEffect(() => { load() }, [from, to, category, page])
 
   const handleSearch = (value) => {
     setSearch(value)
@@ -130,9 +141,26 @@ export default function ExpenseList() {
                   ))}
                 </tbody>
               </table>
-              <div style={{ padding: '0.75rem 1rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>{list.length} record{list.length !== 1 ? 's' : ''}</span>
-                <span style={{ fontWeight: 700 }}>Total: {total.toLocaleString('en-IN')}</span>
+              <div style={{ padding: '0.75rem 1rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>
+                  {totalCount > PAGE_SIZE
+                    ? `${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, totalCount)} of ${totalCount}`
+                    : `${list.length} record${list.length !== 1 ? 's' : ''}`
+                  }
+                </span>
+                <span style={{ fontWeight: 700 }}>Page Total: {total.toLocaleString('en-IN')}</span>
+                {totalCount > PAGE_SIZE && !search.trim() && (
+                  <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                    <button className="btn btn-secondary btn-sm" disabled={page === 0}
+                      onClick={() => setPage(p => Math.max(0, p - 1))}>← Prev</button>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                      Page {page + 1} of {Math.ceil(totalCount / PAGE_SIZE)}
+                    </span>
+                    <button className="btn btn-secondary btn-sm"
+                      disabled={(page + 1) * PAGE_SIZE >= totalCount}
+                      onClick={() => setPage(p => p + 1)}>Next →</button>
+                  </div>
+                )}
               </div>
             </>
           )}

@@ -41,8 +41,27 @@ public class ExpenseHandler {
         String category = ctx.queryParam("category");
         LocalDate from = fromStr != null && !fromStr.isBlank() ? LocalDate.parse(fromStr) : null;
         LocalDate to = toStr != null && !toStr.isBlank() ? LocalDate.parse(toStr) : null;
-        List<ExpenseEntry> list = expenseDao.findByUserAndFilters(user.getId(), from, to, category);
-        ctx.json(list.stream().map(this::entryResponse).collect(Collectors.toList()));
+        List<ExpenseEntry> allEntries = expenseDao.findByUserAndFilters(user.getId(), from, to, category);
+
+        String limitStr = ctx.queryParam("limit");
+        String offsetStr = ctx.queryParam("offset");
+        if (limitStr != null && !limitStr.isBlank()) {
+            int limit = Math.min(Integer.parseInt(limitStr), 500);
+            int offset = (offsetStr != null && !offsetStr.isBlank()) ? Integer.parseInt(offsetStr) : 0;
+            int total = allEntries.size();
+            List<ExpenseEntry> page = allEntries.subList(
+                    Math.min(offset, total),
+                    Math.min(offset + limit, total)
+            );
+            Map<String, Object> result = new HashMap<>();
+            result.put("data", page.stream().map(this::entryResponse).collect(Collectors.toList()));
+            result.put("total", total);
+            result.put("limit", limit);
+            result.put("offset", offset);
+            ctx.json(result);
+        } else {
+            ctx.json(allEntries.stream().map(this::entryResponse).collect(Collectors.toList()));
+        }
     }
 
     public void search(Context ctx) {

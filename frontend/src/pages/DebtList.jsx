@@ -13,10 +13,12 @@ import {
   getDebtTypeLabel,
   getDebtStatusLabel,
 } from '../constants/debts';
+import { useToast } from '../components/Toast';
 
 
 export default function DebtList() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [debts, setDebts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -25,6 +27,7 @@ export default function DebtList() {
   const [paymentForms, setPaymentForms] = useState({});
   const [payments, setPayments] = useState({});
   const [submittingPayment, setSubmittingPayment] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Fetch debts on mount
   useEffect(() => {
@@ -101,7 +104,7 @@ export default function DebtList() {
     const notes = formData.get('notes');
 
     if (!paymentAmount || !paymentDate) {
-      alert('Please fill in all required fields');
+      toast.warning('Please fill in all required fields');
       return;
     }
 
@@ -131,7 +134,7 @@ export default function DebtList() {
         }));
       }
     } catch (err) {
-      alert(err.message || 'Failed to add payment');
+      toast.error(err.message || 'Failed to add payment');
     } finally {
       setSubmittingPayment(null);
     }
@@ -156,7 +159,7 @@ export default function DebtList() {
           [debtId]: true,
         }));
       } catch (err) {
-        alert(err.message || 'Failed to fetch payments');
+        toast.error(err.message || 'Failed to fetch payments');
       }
     }
   };
@@ -208,7 +211,11 @@ export default function DebtList() {
         </div>
       </div>
 
-      {/* Status Filter */}
+      {/* Search + Status Filter */}
+      <div className="filters" style={{ marginBottom: '1rem' }}>
+        <input type="text" placeholder="Search by name or type..." value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)} title="Search debts" />
+      </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
         <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Status:</span>
         <div className="strategy-toggle" style={{ marginBottom: 0 }}>
@@ -243,7 +250,12 @@ export default function DebtList() {
               </tr>
             </thead>
             <tbody>
-              {debts.map((debt) => (
+              {debts.filter(debt => {
+                if (!searchQuery.trim()) return true;
+                const q = searchQuery.toLowerCase();
+                return (debt.name || '').toLowerCase().includes(q) ||
+                  (debt.type || '').toLowerCase().includes(q);
+              }).map((debt) => (
                 <React.Fragment key={debt.id}>
                   <tr>
                     <td style={{ fontWeight: 500 }}>{debt.name}</td>

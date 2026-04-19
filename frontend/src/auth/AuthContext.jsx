@@ -12,7 +12,23 @@ export function AuthProvider({ children }) {
     const savedUser = localStorage.getItem('user')
     if (token && savedUser) {
       try {
-        setUser(JSON.parse(savedUser))
+        const parsed = JSON.parse(savedUser)
+        setUser(parsed)
+        getMe().then(data => {
+          if (data && data.id) {
+            setUser(data)
+            localStorage.setItem('user', JSON.stringify(data))
+          } else {
+            localStorage.removeItem('token')
+            localStorage.removeItem('user')
+            setUser(null)
+          }
+        }).catch(() => {
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
+          setUser(null)
+        }).finally(() => setLoading(false))
+        return
       } catch (e) {
         localStorage.removeItem('token')
         localStorage.removeItem('user')

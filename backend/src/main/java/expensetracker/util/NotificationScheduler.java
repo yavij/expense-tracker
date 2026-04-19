@@ -75,7 +75,15 @@ public class NotificationScheduler {
                 TimeUnit.DAYS
         );
 
-        log.info("Notification scheduler started with daily budget and debt checks");
+        // Schedule weekly summary - runs immediately and then every 7 days
+        scheduler.scheduleAtFixedRate(
+                this::sendWeeklySummaries,
+                0,
+                7,
+                TimeUnit.DAYS
+        );
+
+        log.info("Notification scheduler started with daily budget/debt checks and weekly summary");
     }
 
     /**

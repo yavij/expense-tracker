@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { getExpenseSummary } from '../api/client'
+import { getExpenseSummary, getMonthlyAnalytics } from '../api/client'
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
@@ -29,6 +29,11 @@ export default function Dashboard() {
     return saved ? JSON.parse(saved) : DEFAULT_WIDGETS
   })
   const [draggedItem, setDraggedItem] = useState(null)
+  const [analytics, setAnalytics] = useState(null)
+
+  useEffect(() => {
+    getMonthlyAnalytics(month).then(setAnalytics).catch(() => {})
+  }, [month])
 
   useEffect(() => {
     localStorage.setItem('dashboard-layout', layout)
@@ -174,6 +179,86 @@ export default function Dashboard() {
     }
   }
 
+  const CHART_COLORS = ['#2563eb', '#059669', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#ec4899', '#f59e0b', '#6366f1', '#14b8a6']
+
+  const renderCharts = () => {
+    const breakdown = analytics?.expenseBreakdown ?? analytics?.categoryBreakdown ?? []
+    if (breakdown.length === 0) return null
+    const total = breakdown.reduce((s, c) => s + (c.amount ?? 0), 0) || 1
+
+    return (
+      <div className="dashboard-charts">
+        <div className="dashboard-chart-card">
+          <h3>Category Breakdown</h3>
+          <div className="mini-donut-wrap">
+            <svg viewBox="0 0 200 200" className="donut-svg">
+              <circle cx="100" cy="100" r="70" fill="none" stroke="var(--border-color)" strokeWidth="30" />
+              {(() => {
+                let cumPct = 0
+                return breakdown.map((cat, idx) => {
+                  const pct = (cat.amount / total) * 100
+                  const startAngle = (cumPct / 100) * 360
+                  cumPct += pct
+                  const endAngle = (cumPct / 100) * 360
+                  const r = 80
+                  const startRad = (startAngle * Math.PI) / 180 - Math.PI / 2
+                  const endRad = (endAngle * Math.PI) / 180 - Math.PI / 2
+                  const x1 = 100 + r * Math.cos(startRad)
+                  const y1 = 100 + r * Math.sin(startRad)
+                  const x2 = 100 + r * Math.cos(endRad)
+                  const y2 = 100 + r * Math.sin(endRad)
+                  const largeArc = pct > 50 ? 1 : 0
+                  return (
+                    <path key={idx}
+                      d={`M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`}
+                      fill="none" stroke={CHART_COLORS[idx % CHART_COLORS.length]}
+                      strokeWidth="30" />
+                  )
+                })
+              })()}
+              <circle cx="100" cy="100" r="45" fill="var(--bg-secondary, white)" />
+              <text x="100" y="96" textAnchor="middle" fontSize="14" fill="var(--text-secondary)">Total</text>
+              <text x="100" y="114" textAnchor="middle" fontSize="16" fontWeight="700" fill="var(--text-primary)">
+                {formatAmount(total)}
+              </text>
+            </svg>
+            <div className="mini-legend">
+              {breakdown.slice(0, 6).map((cat, idx) => (
+                <div key={idx} className="mini-legend-item">
+                  <span className="mini-legend-dot" style={{ background: CHART_COLORS[idx % CHART_COLORS.length] }} />
+                  <span>{cat.category}</span>
+                  <span style={{ fontWeight: 600, marginLeft: 'auto', color: 'var(--text-secondary)' }}>
+                    {((cat.amount / total) * 100).toFixed(0)}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="dashboard-chart-card">
+          <h3>Top Spending Categories</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {breakdown.slice(0, 5).map((cat, idx) => {
+              const pct = (cat.amount / total) * 100
+              return (
+                <div key={idx}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.2rem' }}>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{cat.category}</span>
+                    <span style={{ color: 'var(--text-secondary)' }}>{formatAmount(cat.amount)}</span>
+                  </div>
+                  <div style={{ height: '8px', background: 'var(--border-color)', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${pct}%`, background: CHART_COLORS[idx % CHART_COLORS.length], borderRadius: '4px', transition: 'width 0.5s' }} />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const renderDefault = () => (
     <>
       <div className="month-nav">
@@ -184,9 +269,12 @@ export default function Dashboard() {
       {loading && <p style={{ color: 'var(--text-secondary)' }}>Loading summary...</p>}
       {err && <p className="error">{err}</p>}
       {summary && !loading && (
-        <div className="cards">
-          {widgets.map((w, i) => renderWidget(w, i))}
-        </div>
+        <>
+          <div className="cards">
+            {widgets.map((w, i) => renderWidget(w, i))}
+          </div>
+          {renderCharts()}
+        </>
       )}
     </>
   )
@@ -201,9 +289,12 @@ export default function Dashboard() {
       {loading && <p style={{ color: 'var(--text-secondary)' }}>Loading summary...</p>}
       {err && <p className="error">{err}</p>}
       {summary && !loading && (
-        <div className="cards">
-          {widgets.map((w, i) => renderWidget(w, i))}
-        </div>
+        <>
+          <div className="cards">
+            {widgets.map((w, i) => renderWidget(w, i))}
+          </div>
+          {renderCharts()}
+        </>
       )}
     </>
   )
@@ -224,9 +315,12 @@ export default function Dashboard() {
           {loading && <p style={{ color: 'var(--text-secondary)' }}>Loading summary...</p>}
           {err && <p className="error">{err}</p>}
           {summary && !loading && (
-            <div className="cards">
-              {widgets.map((w, i) => renderWidget(w, i))}
-            </div>
+            <>
+              <div className="cards">
+                {widgets.map((w, i) => renderWidget(w, i))}
+              </div>
+              {renderCharts()}
+            </>
           )}
         </div>
       </div>

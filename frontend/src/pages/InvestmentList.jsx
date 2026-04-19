@@ -10,6 +10,7 @@ export default function InvestmentList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedType, setSelectedType] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Fetch investments
   useEffect(() => {
@@ -122,6 +123,8 @@ export default function InvestmentList() {
 
       {/* Filter */}
       <div className="filters" style={{ marginBottom: '1rem' }}>
+        <input type="text" placeholder="Search by name or type..." value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)} title="Search investments" />
         <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Type:</span>
         <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)}>
           <option value="ALL">All Types</option>
@@ -129,6 +132,11 @@ export default function InvestmentList() {
             <option key={type.value} value={type.value}>{type.label}</option>
           ))}
         </select>
+        {(selectedType !== 'ALL' || searchQuery) && (
+          <button type="button" className="btn btn-sm btn-outline" onClick={() => { setSelectedType('ALL'); setSearchQuery(''); }}>
+            Clear filters
+          </button>
+        )}
       </div>
 
       {/* Investments Table */}
@@ -151,7 +159,12 @@ export default function InvestmentList() {
               </tr>
             </thead>
             <tbody>
-              {investments.map((investment) => {
+              {investments.filter(inv => {
+                if (!searchQuery.trim()) return true;
+                const q = searchQuery.toLowerCase();
+                return (inv.name || '').toLowerCase().includes(q) ||
+                  (inv.type || '').toLowerCase().includes(q);
+              }).map((investment) => {
                 const gainLoss = investment.currentValue - investment.investedAmount;
                 const glPercent = investment.investedAmount > 0
                   ? ((gainLoss / investment.investedAmount) * 100).toFixed(2)
